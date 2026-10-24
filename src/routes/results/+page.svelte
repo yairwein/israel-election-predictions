@@ -141,8 +141,16 @@
 
 		{#if data.recent.length}
 			<div class="card section">
-				<div class="eyebrow">פעילות אחרונה</div>
-				<h3 class="ttl">תחזיות אחרונות</h3>
+				<div class="recent-head">
+					<div>
+						<div class="eyebrow">פעילות אחרונה</div>
+						<h3 class="ttl">תחזיות אחרונות</h3>
+					</div>
+					<a class="btn btn-ghost btn-sm dl" href="/api/predictions.csv" download>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0-5-5m5 5 5-5M5 19h14"/></svg>
+						הורדת כל הנתונים (CSV)
+					</a>
+				</div>
 				<ul class="recent">
 					{#each data.recent as r}
 						<li>
@@ -178,6 +186,9 @@
 	}
 	.dist { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
 	.dist summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--muted); margin-bottom: 10px; }
+	.recent-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+	.recent-head .ttl { margin-bottom: 10px; }
+	.dl { gap: 6px; }
 	.recent { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 24px; }
 	.recent li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 	.nick { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

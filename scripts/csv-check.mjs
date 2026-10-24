@@ -1,0 +1,30 @@
+// Raw-data download: the button on /results downloads a CSV that matches the counted predictions,
+// with no emails. node scripts/csv-check.mjs <base> <outdir>
+import { chromium, devices } from 'playwright';
+import { readFileSync, copyFileSync } from 'node:fs';
+const [base, out] = process.argv.slice(2);
+const fails = [];
+const b = await chromium.launch();
+const ctx = await b.newContext({ ...devices['iPhone 13'], locale: 'he-IL', acceptDownloads: true });
+const page = await ctx.newPage();
+await page.goto(base + '/results', { waitUntil: 'networkidle' });
+const btn = page.getByRole('link', { name: /הורדת כל הנתונים/ });
+if (!(await btn.count())) fails.push('download button missing');
+await btn.scrollIntoViewIfNeeded();
+await page.locator('.recent-head').screenshot({ path: `${out}/csv-button.png` });
+const [dl] = await Promise.all([page.waitForEvent('download'), btn.tap()]);
+const name = dl.suggestedFilename();
+if (!/^election-2026-predictions-\d{4}-\d{2}-\d{2}\.csv$/.test(name)) fails.push(`file name ${name}`);
+const path = await dl.path();
+copyFileSync(path, `${out}/${name}`);
+const text = readFileSync(path, 'utf8');
+if (!text.startsWith('\uFEFF')) fails.push('no BOM');
+const lines = text.replace(/^\uFEFF/, '').trim().split(/\r\n/);
+const agg = await (await fetch(base + '/api/aggregate')).json();
+if (lines.length - 1 !== agg.n) fails.push(`CSV rows ${lines.length - 1} vs counted predictions ${agg.n}`);
+if (/@/.test(text)) fails.push('CSV contains an @ (email?)');
+const res = await fetch(base + '/api/predictions.csv');
+if (!res.headers.get('content-type')?.startsWith('text/csv')) fails.push(`content-type ${res.headers.get('content-type')}`);
+console.log(`downloaded ${name}: ${lines.length - 1} rows, ${lines[0].split(',').length} columns`);
+await b.close();
+console.log(fails.length ? `FAIL\n${fails.join('\n')}` : 'csv-check ok');
