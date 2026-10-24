@@ -37,13 +37,17 @@
 				if (tries++ < 100) setTimeout(init, 100);
 				return;
 			}
-			const next = location.pathname + location.search;
 			if (inAppBrowser()) {
+				// Google requires login_uri to match the registered redirect URI exactly (no query string),
+				// so the page to come back to travels in a short-lived cookie instead.
+				const next = location.pathname + location.search;
+				const secure = location.protocol === 'https:' ? '; Secure; SameSite=None' : '; SameSite=Lax';
+				document.cookie = `signin_next=${encodeURIComponent(next)}; Path=/api/auth/google; Max-Age=900${secure}`;
 				g.initialize({
 					client_id: clientId,
 					callback: onCredential,
 					ux_mode: 'redirect',
-					login_uri: `${location.origin}/api/auth/google/redirect?next=${encodeURIComponent(next)}`,
+					login_uri: `${location.origin}/api/auth/google/redirect`,
 					context: 'signin'
 				});
 			} else {

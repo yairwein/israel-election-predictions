@@ -30,9 +30,10 @@ const x = await gsiConfig(X_UA);
 console.log('mobile Safari →', JSON.stringify(normal));
 console.log('X in-app      →', JSON.stringify(x));
 if (normal?.ux_mode !== 'popup' || normal?.login_uri) fails.push('normal browser should use the popup');
-if (x?.ux_mode !== 'redirect' || !x?.login_uri?.endsWith('/api/auth/google/redirect?next=%2Fpredict')) fails.push('X in-app browser should use redirect with our login_uri');
+// Google matches login_uri exactly against the registered redirect URI: no query string allowed.
+if (x?.ux_mode !== 'redirect' || !x?.login_uri?.endsWith('/api/auth/google/redirect')) fails.push(`X in-app browser should use redirect with the exact login_uri, got ${x?.login_uri}`);
 
-const post = (body, cookie) => fetch(base + '/api/auth/google/redirect?next=/predict', {
+const post = (body, cookie) => fetch(base + '/api/auth/google/redirect', {
 	method: 'POST', redirect: 'manual',
 	headers: { 'content-type': 'application/x-www-form-urlencoded', origin: 'https://accounts.google.com', ...(cookie ? { cookie } : {}) },
 	body: new URLSearchParams(body)
@@ -47,3 +48,4 @@ if (badToken.status !== 303 || loc !== '/?signin=failed') fails.push(`bad token 
 console.log(`endpoint: no cookie ${noCookie.status} · mismatch ${mismatch.status} · bad token ${badToken.status} → ${loc}`);
 await b.close();
 console.log(fails.length ? `FAIL\n${fails.join('\n')}` : 'redirect-check ok');
+

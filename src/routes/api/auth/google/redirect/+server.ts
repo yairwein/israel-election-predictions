@@ -10,7 +10,9 @@ import { rateLimit } from '$lib/server/http';
 /**
  * Sign-in by redirect (used inside in-app browsers like X, where the Google popup can't report back).
  * Google posts the ID token here as a form: `credential` and `g_csrf_token`, with the same
- * `g_csrf_token` set as a cookie on our domain (double-submit check). Then we go back to the page.
+ * `g_csrf_token` set as a cookie on our domain (double-submit check). Then we go back to the page
+ * saved in the signin_next cookie. The URL itself has no query string: Google matches it exactly
+ * against the registered redirect URI.
  */
 export const POST: RequestHandler = async ({ request, cookies, url, getClientAddress }) => {
 	rateLimit(`auth:${getClientAddress()}`, 20, 60_000);
@@ -31,8 +33,14 @@ export const POST: RequestHandler = async ({ request, cookies, url, getClientAdd
 		redirect(303, '/?signin=failed');
 	}
 
-	// Back to where they started (same-site path only).
-	const back = url.searchParams.get('next') ?? '/predict';
-	const safe = back.startsWith('/') && !back.startsWith('//') ? back : '/predict';
-	redirect(303, safe);
+	// Back to where they started: a same-site path from the signin_next cookie, else the prediction form.
+	let back = '/predict';
+	try {
+		const c = decodeURIComponent(cookies.get('signin_next') ?? '');
+		if (c.startsWith('/') && !c.startsWith('//')) back = c;
+	} catch {
+		/* malformed cookie: use the default */
+	}
+	cookies.delete('signin_next', { path: '/api/auth/google' });
+	redirect(303, back);
 };
