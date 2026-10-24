@@ -51,7 +51,7 @@
 				<div class="summary">
 					<div><span class="num big" style="color: var(--coalition)">{pct(sc?.coalition.share ?? 0)}</span><span>גוש נתניהו 61+</span></div>
 					<div><span class="num big" style="color: var(--opposition)">{pct(sc?.opposition.share ?? 0)}</span><span>אופוזיציה 61+</span></div>
-					<div><span class="num big" style="color: var(--neither)">{pct(sc?.neither.share ?? 0)}</span><span>אין 61</span></div>
+					<div><span class="num big" style="color: var(--neither)">{pct(sc?.neither.share ?? 0)}</span><span>אין 61 בלי שיתוף פעולה עם המפלגות הערביות</span></div>
 				</div>
 				<p class="faint small center">על סמך {s.n.toLocaleString('he-IL')} תחזיות</p>
 			{:else}
@@ -92,9 +92,10 @@
 	.lock { padding: 14px 18px; }
 	.visual { padding: 24px; }
 	.tgl { margin-top: 14px; }
-	.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; text-align: center; }
+	.summary { display: grid; grid-template-columns: 1fr 1fr 1.35fr; gap: 6px; margin-top: 12px; text-align: center; }
 	.summary div { display: flex; flex-direction: column; }
-	.summary span:last-child { font-size: 0.8rem; color: var(--muted); }
+	.summary span:last-child { font-size: 0.8rem; color: var(--muted); line-height: 1.3; }
+	.summary div:last-child span:last-child { font-size: 0.74rem; text-wrap: balance; }
 	.big { font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
 	.steps h3 { font-size: 1.1rem; margin: 10px 0 4px; }
 	.steps p { margin: 0; font-size: 0.94rem; }
