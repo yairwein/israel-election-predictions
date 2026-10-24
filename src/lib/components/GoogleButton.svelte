@@ -4,6 +4,17 @@
 	import { api } from '$lib/api';
 
 	let { clientId, size = 'large' }: { clientId: string; size?: 'large' | 'medium' } = $props();
+
+	/**
+	 * In-app browsers (X, Instagram, Facebook, WhatsApp, LinkedIn, TikTok…) break the Google popup:
+	 * it opens as a separate tab that can't report back, leaving a blank accounts.google.com page.
+	 * There we sign in by redirect instead: the same tab goes to Google and comes back signed in.
+	 */
+	function inAppBrowser(): boolean {
+		const ua = navigator.userAgent;
+		return /Twitter|FBAN|FBAV|FB_IAB|Instagram|LinkedInApp|Line\/|WhatsApp|TikTok|musical_ly|Snapchat|Telegram/i.test(ua)
+			|| (/iPhone|iPad/.test(ua) && !/Safari\//.test(ua) && /AppleWebKit/.test(ua));
+	}
 	let el = $state<HTMLDivElement>();
 	let error = $state('');
 
@@ -26,7 +37,18 @@
 				if (tries++ < 100) setTimeout(init, 100);
 				return;
 			}
-			g.initialize({ client_id: clientId, callback: onCredential, context: 'signin', itp_support: true });
+			const next = location.pathname + location.search;
+			if (inAppBrowser()) {
+				g.initialize({
+					client_id: clientId,
+					callback: onCredential,
+					ux_mode: 'redirect',
+					login_uri: `${location.origin}/api/auth/google/redirect?next=${encodeURIComponent(next)}`,
+					context: 'signin'
+				});
+			} else {
+				g.initialize({ client_id: clientId, callback: onCredential, context: 'signin', itp_support: true });
+			}
 			if (!el) return;
 			g.renderButton(el, {
 				type: 'standard',

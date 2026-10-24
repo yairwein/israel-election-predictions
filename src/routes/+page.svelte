@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Countdown from '$lib/components/Countdown.svelte';
 	import Hemicycle from '$lib/components/Hemicycle.svelte';
 	import GoogleButton from '$lib/components/GoogleButton.svelte';
@@ -22,6 +23,10 @@
 			<p class="lead">
 				חלקו 120 מנדטים בין המפלגות. אנחנו נשקלל את כל התחזיות ונחשב מה הסיכוי של כל גוש להגיע ל-61.
 			</p>
+
+			{#if page.url.searchParams.get('signin') === 'failed'}
+				<div class="signin-failed" role="alert">ההתחברות עם Google לא הצליחה. נסו שוב, או פתחו את האתר בדפדפן הרגיל.</div>
+			{/if}
 
 			{#if s.locked}
 				<div class="lock card">🔒 התחזיות ננעלו ב{fmtDateTime(s.lockAt)}. <a href="/results">לממוצע התחזיות ←</a></div>
@@ -90,6 +95,11 @@
 	.center { text-align: center; margin: 8px 0 0; }
 	.countdown { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
 	.lock { padding: 14px 18px; }
+	.signin-failed {
+		margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; font-size: 0.92rem;
+		background: color-mix(in srgb, var(--bad) 10%, var(--surface)); color: var(--bad);
+		border: 1px solid color-mix(in srgb, var(--bad) 35%, var(--border));
+	}
 	.visual { padding: 24px; }
 	.tgl { margin-top: 14px; }
 	.summary { display: grid; grid-template-columns: 1fr 1fr 1.35fr; gap: 6px; margin-top: 12px; text-align: center; }

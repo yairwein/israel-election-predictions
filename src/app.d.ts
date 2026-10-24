@@ -24,6 +24,7 @@ declare global {
 						itp_support?: boolean;
 						context?: string;
 						ux_mode?: string;
+						login_uri?: string;
 					}): void;
 					renderButton(element: HTMLElement, config: Record<string, unknown>): void;
 					prompt(): void;
