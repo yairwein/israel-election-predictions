@@ -38,7 +38,7 @@ for (const [name, dev] of [['iphone', devices['iPhone 13']], ['android', devices
 	console.log(name, 'X app link →', app.slice(0, 60));
 
 	// Without the X app installed (as here), the page must fall back to the web intent.
-	for (const [label, host] of [['שיתוף ב-X', 'twitter.com|x.com'], ['שיתוף בפייסבוק', 'facebook.com']]) {
+	for (const [label, host] of [['שיתוף ב-X', 'twitter.com|x.com']]) {
 		const a = page.locator(`#share a[aria-label="${label}"]`);
 		const target = await a.getAttribute('target');
 		if (target === '_blank') fails.push(`${name} ${label}: target=_blank on mobile (app links will not open)`);

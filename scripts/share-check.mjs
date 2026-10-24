@@ -18,13 +18,12 @@ await page.locator('#share img').evaluate((img) => img.decode());
 await page.locator('#share').screenshot({ path: `${out}/share-card.png` });
 
 const xHref = await page.locator('#share a[aria-label="שיתוף ב-X"]').getAttribute('href');
-const fbHref = await page.locator('#share a[aria-label="שיתוף בפייסבוק"]').getAttribute('href');
-const xu = new URL(xHref), fu = new URL(fbHref);
+const xu = new URL(xHref);
+if (await page.locator('#share a[aria-label="שיתוף בפייסבוק"]').count()) fails.push('Facebook button should be gone');
 if (xu.origin + xu.pathname !== 'https://twitter.com/intent/tweet') fails.push(`X href ${xHref}`);
 const sharedUrl = xu.searchParams.get('url');
 if (!/\/p\/[A-Za-z0-9_-]+\?v=\d+$/.test(sharedUrl ?? '')) fails.push(`X url param ${sharedUrl}`);
 if (!xu.searchParams.get('text')?.includes('גוש נתניהו')) fails.push('X text missing blocs');
-if (fu.origin + fu.pathname !== 'https://www.facebook.com/sharer/sharer.php' || fu.searchParams.get('u') !== sharedUrl) fails.push(`FB href ${fbHref}`);
 
 // public page + og tags, signed out
 const anon = await b.newContext({ ...devices['iPhone 13'], locale: 'he-IL' });
