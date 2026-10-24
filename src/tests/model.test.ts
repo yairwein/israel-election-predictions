@@ -159,3 +159,43 @@ describe('trimmed mean (extremes set aside)', () => {
 		expect(Object.values(a.fullAllocation).reduce((x, y) => x + y, 0)).toBe(120);
 	});
 });
+
+import { computeTrend, trendSamples } from '../lib/model';
+describe('trend (averages as predictions were added)', () => {
+	const random = (seed: number) => () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
+	function randomKnesset(rnd: () => number): Seats {
+		const s: Seats = { ...POLL_AVERAGE };
+		for (let i = 0; i < 6; i++) {
+			const a = PARTY_IDS[Math.floor(rnd() * PARTY_IDS.length)];
+			const b = PARTY_IDS[Math.floor(rnd() * PARTY_IDS.length)];
+			if (s[a] > 5 && s[b] >= 4 && s[b] < 35) { s[a]--; s[b]++; }
+		}
+		return s;
+	}
+	it('the last point equals the current averages, both views', () => {
+		const rnd = random(7);
+		const preds = Array.from({ length: 137 }, (_, i) => ({ seats: randomKnesset(rnd), updatedAt: new Date(1e12 + i * 1000).toISOString() }));
+		const trend = computeTrend(preds);
+		const agg = computeAggregate(preds);
+		const last = trend.at(-1)!;
+		expect(last.n).toBe(137);
+		for (const p of agg.parties) {
+			expect(last.trimmed[p.id]).toBeCloseTo(p.mean, 2);
+			expect(last.full[p.id]).toBeCloseTo(p.full.mean, 2);
+		}
+	});
+	it('follows save order, and point k averages the first k', () => {
+		const a = { seats: { ...POLL_AVERAGE, likud: 30, yashar: 15 }, updatedAt: '2026-10-24T10:00:00Z' };
+		const b = { seats: { ...POLL_AVERAGE }, updatedAt: '2026-10-24T09:00:00Z' };
+		const t = computeTrend([a, b]);
+		expect(t[0].full.likud).toBe(POLL_AVERAGE.likud); // b was saved first
+		expect(t[1].full.likud).toBe((POLL_AVERAGE.likud + 30) / 2);
+	});
+	it('samples every point early, then evenly, always including the last', () => {
+		expect(trendSamples(50)).toHaveLength(50);
+		const s = trendSamples(10000);
+		expect(s.length).toBeLessThanOrEqual(81);
+		expect(s.slice(0, 20)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
+		expect(s.at(-1)).toBe(10000);
+	});
+});

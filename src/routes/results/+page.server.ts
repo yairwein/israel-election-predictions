@@ -1,6 +1,6 @@
 import { publicOrigin } from '$lib/server/config';
 import type { PageServerLoad } from './$types';
-import { getSummary, publicSummary } from '$lib/server/aggregate';
+import { getSummary, publicSummary, getTrend } from '$lib/server/aggregate';
 import { getRepo } from '$lib/server/repo';
 import { sumOf, getScenarios } from '$lib/parties';
 
@@ -26,6 +26,7 @@ export const load: PageServerLoad = async ({ depends, url }) => {
 		summary,
 		recent,
 		origin: publicOrigin(url),
+		trend: summary.hidden ? [] : await getTrend(),
 		og: { title: 'ממוצע התחזיות · תחזית הבחירות 2026', image: '/og/average', path: '/results' }
 	};
 };

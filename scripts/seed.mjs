@@ -1,6 +1,8 @@
 // Seeds a dev-mode server with simulated voters: node scripts/seed.mjs http://localhost:3000 60
 const base = process.argv[2] ?? 'http://localhost:3000';
 const count = Number(process.argv[3] ?? 50);
+// Name prefix for the simulated voters; use a different one to add more people instead of updating the same ones.
+const prefix = process.argv[4] ?? 'seed';
 const POLL = { likud: 23.25, shas: 8.17, otzma: 7.75, rzp: 6.75, utj: 7.5, amcha: 1.0, yashar: 20.83, together: 12.5, democrats: 9.08, yb: 7.08, reservists: 2.0, haredi: 0, raam: 5.58, joint: 8.5 };
 const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 
@@ -27,7 +29,7 @@ async function call(method, path, body, cookie) {
 
 let ok = 0;
 await Promise.all(Array.from({ length: count }, async (_, i) => {
-	const { res } = await call('POST', '/api/auth/dev', { name: `seed${i}` });
+	const { res } = await call('POST', '/api/auth/dev', { name: `${prefix}${i}` });
 	const cookie = res.headers.get('set-cookie').split(';')[0];
 	const turnout = Math.random() < 0.7 ? Math.round((68 + gauss() * 3) * 10) / 10 : null;
 	await call('PUT', '/api/me/prediction', { seats: randomKnesset(), turnout }, cookie);

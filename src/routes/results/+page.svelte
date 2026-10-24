@@ -10,6 +10,7 @@
 	import { scenario } from '$lib/scenario.svelte';
 	import ShareButtons from '$lib/components/ShareButtons.svelte';
 	import ExtremesToggle from '$lib/components/ExtremesToggle.svelte';
+	import TrendChart from '$lib/components/TrendChart.svelte';
 	import { extremes } from '$lib/extremes.svelte';
 	import { fmtDateTime, fmtShort, one } from '$lib/format';
 
@@ -117,6 +118,14 @@
 			<h3 class="ttl">מנדטים צפויים</h3>
 			<PartyBars parties={agg.parties} includeExtremes={extremes.include} />
 		</div>
+
+		{#if data.trend.length >= 2}
+			<div class="card section">
+				<div class="eyebrow">יציבות התחזית</div>
+				<h3 class="ttl">איך הממוצע השתנה ככל שנוספו תחזיות</h3>
+				<TrendChart trend={data.trend} includeExtremes={extremes.include} />
+			</div>
+		{/if}
 
 		<div class="card section">
 			<div class="eyebrow">שתפו</div>

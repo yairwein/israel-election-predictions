@@ -1,0 +1,24 @@
+import { chromium, devices } from 'playwright';
+const base = process.argv[2];
+const b = await chromium.launch();
+const ctx = await b.newContext({ ...devices['iPhone 13'], locale: 'he-IL' });
+const p = await ctx.newPage();
+p.on('console', (m) => console.log('console:', m.text()));
+await p.goto(base + '/results', { waitUntil: 'networkidle' });
+const card = p.locator('.card', { hasText: 'איך הממוצע השתנה' });
+await card.scrollIntoViewIfNeeded();
+await p.locator('.xt').first().tap();
+await p.waitForTimeout(200);
+await p.locator('.xt').first().tap();
+await card.scrollIntoViewIfNeeded();
+await p.waitForTimeout(300);
+await card.locator('svg').evaluate((svg) => {
+	for (const t of ['pointerdown', 'pointerup', 'click']) svg.addEventListener(t, (e) => console.log('event', t));
+	document.addEventListener('pointerdown', (e) => console.log('doc pointerdown on', e.target.tagName, e.target.className?.baseVal ?? e.target.className), true);
+});
+const box = await card.locator('svg').boundingBox();
+console.log('box', JSON.stringify(box), 'scrollY', await p.evaluate(() => scrollY), 'url', p.url());
+await p.touchscreen.tap(box.x + box.width * 0.3, box.y + box.height * 0.5);
+await p.waitForTimeout(500);
+console.log('cursor:', await card.locator('svg line.cursor').count(), 'url', p.url());
+await b.close();

@@ -1,4 +1,4 @@
-import { computeAggregate, type Aggregate } from '$lib/model';
+import { computeAggregate, computeTrend, type Aggregate, type TrendPoint } from '$lib/model';
 import { getRepo } from './repo';
 import { lockAt, electionAt, resultsHidden, resultsHiddenUntil } from './config';
 
@@ -40,6 +40,17 @@ export function publicSummary(s: Summary): Summary {
 	return s.hidden ? { ...s, aggregate: null } : s;
 }
 
+let trendCache: { at: number; value: TrendPoint[] } | null = null;
+
+/** Running party averages as predictions were added (counted predictions only), cached briefly. */
+export async function getTrend(): Promise<TrendPoint[]> {
+	if (trendCache && Date.now() - trendCache.at < 30_000) return trendCache.value;
+	const value = computeTrend(await getRepo().counted());
+	trendCache = { at: Date.now(), value };
+	return value;
+}
+
 export function invalidateSummary() {
 	cached = null;
+	trendCache = null;
 }

@@ -256,3 +256,77 @@ export function computeAggregate(preds: PredictionInput[]): Aggregate {
 		trim: TRIM
 	};
 }
+
+export interface TrendPoint {
+	/** number of predictions counted at this point */
+	n: number;
+	/** when the n-th prediction was saved */
+	at: string;
+	/** party averages at this point, extremes set aside (default) */
+	trimmed: Seats;
+	/** party averages at this point, all predictions */
+	full: Seats;
+}
+
+/** Which prefix sizes to sample: every k up to 20, then evenly spaced, always the last one. */
+export function trendSamples(n: number, maxPoints = 80): number[] {
+	if (n <= maxPoints) return Array.from({ length: n }, (_, i) => i + 1);
+	const out = new Set<number>();
+	for (let k = 1; k <= 20; k++) out.add(k);
+	const rest = maxPoints - 20;
+	for (let i = 1; i <= rest; i++) out.add(Math.round(20 + ((n - 20) * i) / rest));
+	out.add(n);
+	return [...out].sort((a, b) => a - b);
+}
+
+/** Trimmed mean from a histogram of integer seat counts (same rule as `trimmed`). */
+function trimmedFromHist(h: Int32Array, sum: number, k: number, cut: number): number {
+	let s = sum;
+	let left = cut;
+	for (let v = 0; v < h.length && left > 0; v++) {
+		const take = Math.min(h[v], left);
+		s -= take * v;
+		left -= take;
+	}
+	left = cut;
+	for (let v = h.length - 1; v >= 0 && left > 0; v--) {
+		const take = Math.min(h[v], left);
+		s -= take * v;
+		left -= take;
+	}
+	return s / (k - 2 * cut);
+}
+
+/**
+ * How the party averages moved as predictions were added, in the order they were saved
+ * (each person's current version). Point k is the average of the first k predictions.
+ * Uses running histograms, so it is O(n · parties) and cheap even for many predictions.
+ */
+export function computeTrend(preds: (PredictionInput & { updatedAt: string })[], maxPoints = 80): TrendPoint[] {
+	const sorted = [...preds].sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+	const n = sorted.length;
+	const samples = new Set(trendSamples(n, maxPoints));
+	const hist: Record<string, Int32Array> = Object.fromEntries(PARTY_IDS.map((id) => [id, new Int32Array(TOTAL_SEATS + 1)]));
+	const sums: Record<string, number> = Object.fromEntries(PARTY_IDS.map((id) => [id, 0]));
+	const r2 = (x: number) => Math.round(x * 100) / 100;
+	const out: TrendPoint[] = [];
+	for (let i = 0; i < n; i++) {
+		const p = sorted[i];
+		for (const id of PARTY_IDS) {
+			const v = Math.max(0, Math.min(TOTAL_SEATS, Math.round(p.seats[id] ?? 0)));
+			hist[id][v]++;
+			sums[id] += v;
+		}
+		const k = i + 1;
+		if (!samples.has(k)) continue;
+		const cut = Math.floor(k * TRIM);
+		const trimmedSeats: Seats = {};
+		const fullSeats: Seats = {};
+		for (const id of PARTY_IDS) {
+			fullSeats[id] = r2(sums[id] / k);
+			trimmedSeats[id] = r2(cut > 0 ? trimmedFromHist(hist[id], sums[id], k, cut) : sums[id] / k);
+		}
+		out.push({ n: k, at: p.updatedAt, trimmed: trimmedSeats, full: fullSeats });
+	}
+	return out;
+}
