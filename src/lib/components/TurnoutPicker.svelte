@@ -1,12 +1,14 @@
 <script lang="ts">
 	/**
-	 * Turnout guess, built for thumbs: a big slider (40–90%, 0.5 steps), −/+ buttons for fine
-	 * steps, and quick chips around recent elections. Optional: "בלי" clears it.
+	 * Turnout guess, built for thumbs: a slider in 0.5 steps to get close, −/+ in 0.1 steps to fine-tune
+	 * (hold to repeat, speeding up), and quick chips around recent elections. Optional: "בלי" clears it.
 	 * The value is a string ('' = not set) to match the form.
 	 */
+	import { onDestroy } from 'svelte';
+	import { TURNOUT_MIN as MIN, TURNOUT_MAX as MAX, TURNOUT_SLIDER_STEP, TURNOUT_FINE_STEP as FINE } from '$lib/turnout';
+
 	let { value = $bindable(''), disabled = false }: { value?: string; disabled?: boolean } = $props();
 
-	const MIN = 40, MAX = 90, STEP = 0.5;
 	const LAST = 70.6; // 2022 turnout
 	const chips = [65, 67.5, 70.6, 72.5, 75];
 
@@ -16,6 +18,41 @@
 	const set = (v: number) => (value = String(clamp(v)));
 	const fill = $derived(`${((shown - MIN) / (MAX - MIN)) * 100}%`);
 	const diff = $derived(num == null ? null : Math.round((num - LAST) * 10) / 10);
+
+	// Press and hold −/+ to repeat: a pause, then steady steps that speed up.
+	let timer: ReturnType<typeof setTimeout> | null = null;
+	let held = false;
+	function nudge(dir: 1 | -1) {
+		const base = value === '' ? LAST : Number(value);
+		set(base + dir * FINE);
+	}
+	function startHold(e: PointerEvent, dir: 1 | -1) {
+		if (disabled || e.button > 0) return;
+		e.preventDefault();
+		(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+		held = true;
+		nudge(dir);
+		let n = 0;
+		const tick = () => {
+			nudge(dir);
+			n++;
+			timer = setTimeout(tick, n < 10 ? 110 : n < 30 ? 60 : 30);
+		};
+		timer = setTimeout(tick, 420);
+	}
+	function stopHold() {
+		if (timer) clearTimeout(timer);
+		timer = null;
+	}
+	// Keyboard / screen readers: a click without a pointer press still steps once.
+	function click(dir: 1 | -1) {
+		if (held) {
+			held = false;
+			return;
+		}
+		nudge(dir);
+	}
+	onDestroy(stopHold);
 </script>
 
 <div class="tp" class:unset={num == null} class:disabled>
@@ -30,14 +67,22 @@
 	</div>
 
 	<div class="ctrl">
-		<button type="button" class="step" aria-label="הפחתה" {disabled} onclick={() => set(shown - STEP)}>−</button>
+		<button
+			type="button" class="step" aria-label="הפחתה 0.1" {disabled}
+			onpointerdown={(e) => startHold(e, -1)} onpointerup={stopHold} onpointercancel={stopHold} onpointerleave={stopHold}
+			onclick={() => click(-1)} oncontextmenu={(e) => e.preventDefault()}
+		>−</button>
 		<input
-			type="range" min={MIN} max={MAX} step={STEP} value={shown} {disabled}
+			type="range" min={MIN} max={MAX} step={TURNOUT_SLIDER_STEP} value={shown} {disabled}
 			style="--fill: {fill}"
 			aria-label="אחוז הצבעה צפוי" aria-valuetext={num == null ? 'לא נבחר' : `${num} אחוז`}
 			oninput={(e) => set(Number((e.target as HTMLInputElement).value))}
 		/>
-		<button type="button" class="step" aria-label="הוספה" {disabled} onclick={() => set(shown + STEP)}>+</button>
+		<button
+			type="button" class="step" aria-label="הוספה 0.1" {disabled}
+			onpointerdown={(e) => startHold(e, 1)} onpointerup={stopHold} onpointercancel={stopHold} onpointerleave={stopHold}
+			onclick={() => click(1)} oncontextmenu={(e) => e.preventDefault()}
+		>+</button>
 	</div>
 
 	<div class="chips">
@@ -61,6 +106,7 @@
 	/* The slider runs left → right (low → high) like a number line, even in RTL. */
 	.ctrl { display: flex; align-items: center; gap: 10px; direction: ltr; }
 	.step {
+		-webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
 		flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border);
 		background: var(--surface); color: var(--text); font-size: 1.3rem; cursor: pointer; line-height: 1;
 	}

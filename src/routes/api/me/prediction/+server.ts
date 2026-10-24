@@ -5,6 +5,7 @@ import { lockAt } from '$lib/server/config';
 import { LockedError } from '$lib/server/predictions';
 import { invalidateSummary } from '$lib/server/aggregate';
 import { validateSeats } from '$lib/validate';
+import { TURNOUT_MIN, TURNOUT_MAX } from '$lib/turnout';
 import { readJson, rateLimit, requireUid } from '$lib/server/http';
 import { meView } from '$lib/server/me';
 import { DEV_EMAIL } from '$lib/server/dev';
@@ -29,7 +30,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	let turnout: number | null = null;
 	if (body.turnout !== null && body.turnout !== undefined && body.turnout !== '') {
 		const t = Number(body.turnout);
-		if (!Number.isFinite(t) || t < 40 || t > 95) error(400, { message: 'אחוז הצבעה בין 40 ל-95', code: 'invalid_turnout' });
+		if (!Number.isFinite(t) || t < TURNOUT_MIN || t > TURNOUT_MAX) {
+			error(400, { message: `אחוז הצבעה בין ${TURNOUT_MIN} ל-${TURNOUT_MAX}`, code: 'invalid_turnout' });
+		}
 		turnout = Math.round(t * 10) / 10;
 	}
 

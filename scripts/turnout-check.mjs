@@ -18,11 +18,30 @@ if ((await val()) !== '—') fails.push(`initial ${await val()}`);
 
 await tp.getByRole('button', { name: '72.5%' }).tap();
 if ((await val()) !== '72.5%') fails.push(`chip → ${await val()}`);
-await tp.getByRole('button', { name: 'הוספה' }).tap();
-await tp.getByRole('button', { name: 'הוספה' }).tap();
-if ((await val()) !== '73.5%') fails.push(`+ + → ${await val()}`);
-await tp.getByRole('button', { name: 'הפחתה' }).tap();
-if ((await val()) !== '73%') fails.push(`- → ${await val()}`);
+// −/+ are 0.1 steps
+const plus = tp.getByRole('button', { name: 'הוספה 0.1' });
+const minus = tp.getByRole('button', { name: 'הפחתה 0.1' });
+await plus.tap(); await plus.tap(); await plus.tap();
+if ((await val()) !== '72.8%') fails.push(`+ + + → ${await val()}`);
+await minus.tap();
+if ((await val()) !== '72.7%') fails.push(`- → ${await val()}`);
+
+// press and hold + repeats and speeds up
+const pb = await plus.boundingBox();
+await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2);
+await page.mouse.down();
+await page.waitForTimeout(1500);
+await page.mouse.up();
+const afterHold = parseFloat(await val());
+await page.waitForTimeout(400);
+const settled = parseFloat(await val());
+if (!(afterHold >= 73.5)) fails.push(`hold + → ${afterHold} (expected repeated steps)`);
+if (settled !== afterHold) fails.push(`kept changing after release: ${afterHold} → ${settled}`);
+console.log('hold 1.5s:', `72.7 → ${afterHold}`);
+
+// cap at 90
+await page.evaluate(() => {});
+for (let i = 0; i < 3; i++) await tp.getByRole('button', { name: '75%' }).tap();
 
 // drag the slider thumb toward the right (higher)
 const r = await tp.locator('input[type=range]').boundingBox();
@@ -51,3 +70,14 @@ const me2 = await page.evaluate(() => fetch('/api/me').then((r) => r.json()));
 if (me2.prediction?.turnout !== null) fails.push(`cleared turnout saved as ${me2.prediction?.turnout}`);
 await b.close();
 console.log(fails.length ? `FAIL\n${fails.join('\n')}` : 'turnout-check ok');
+
+// API rejects turnout above the shared 90% maximum
+{
+	const r1 = await fetch(base + '/api/auth/dev', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: `cap-${Date.now()}` }) });
+	const cookie = r1.headers.get('set-cookie').split(';')[0];
+	const seats = { likud: 24, shas: 8, otzma: 8, rzp: 7, utj: 8, yashar: 21, together: 13, democrats: 9, yb: 7, raam: 6, joint: 9 };
+	const put = (turnout) => fetch(base + '/api/me/prediction', { method: 'PUT', headers: { 'content-type': 'application/json', cookie }, body: JSON.stringify({ seats, turnout }) }).then((r) => r.status);
+	const [ok90, bad91, ok683] = [await put(90), await put(91), await put(68.3)];
+	console.log(`api: 90→${ok90} 91→${bad91} 68.3→${ok683}`);
+	if (ok90 !== 200 || bad91 !== 400 || ok683 !== 200) { console.log('FAIL api limits'); process.exitCode = 1; }
+}
