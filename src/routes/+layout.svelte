@@ -11,7 +11,7 @@
 	const links = [
 		{ href: '/', label: 'ראשי' },
 		{ href: '/predict', label: 'התחזית שלי' },
-		{ href: '/results', label: 'תחזית הקהל' },
+		{ href: '/results', label: 'ממוצע התחזיות' },
 		{ href: '/method', label: 'איך זה עובד' }
 	];
 
@@ -26,7 +26,12 @@
 	<title>תחזית הבחירות 2026 · חוכמת ההמונים</title>
 	<meta name="description" content="נחשו את תוצאות הבחירות לכנסת ה-26 וראו את התחזית המשוקללת של כולם." />
 	<meta property="og:title" content="תחזית הבחירות 2026 · חוכמת ההמונים" />
-	<meta property="og:description" content="כמה מנדטים יקבל כל גוש? הוסיפו תחזית וראו את ממוצע הקהל." />
+	<meta property="og:description" content="כמה מנדטים יקבל כל גוש? הוסיפו תחזית וראו את ממוצע התחזיות." />
+	{#if data.config.gaId}
+		<!-- Google tag (gtag.js). GA4 enhanced measurement records client-side navigations. -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id={data.config.gaId}"></script>
+		{@html `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',${JSON.stringify(data.config.gaId)});</script>`}
+	{/if}
 </svelte:head>
 
 <header class="top">
@@ -63,8 +68,8 @@
 
 <footer class="container foot faint">
 	<p>
-		אתר עצמאי, לא קשור לאף מפלגה. כתובת המייל משמשת רק למניעת ספאם ואינה מוצגת לאף אחד.
-		הצגת תחזית הקהל אינה סקר דעת קהל.
+		אתר עצמאי, לא קשור לאף מפלגה. כתובת המייל משמשת למניעת הצבעות בוטים, ולא יעשה בה שום שימוש.
+		ממוצע התחזיות אינו סקר דעת קהל.
 	</p>
 </footer>
 

@@ -44,7 +44,7 @@
 		coalWith: sumOf(seats, scWith.coalition),
 		coalWithout: sumOf(seats, scWithout.coalition),
 		oppWith: sumOf(seats, scWith.opposition),
-		oppWithout: sumOf(seats, scWithout.opposition),
+		amcha: sumOf(seats, scWithout.unaligned),
 		arab: sumOf(seats, scWith.arab)
 	});
 
@@ -176,7 +176,7 @@
 	{#if !canPredict}
 		<div class="card signin">
 			<h2>מתחברים כדי לנחש</h2>
-			<p class="muted">ההתחברות עם Google רק מונעת ספאם: תחזית אחת לכל אדם. המייל לא מוצג לאף אחד. תבחרו כינוי, או שנבחר בשבילכם.</p>
+			<p class="muted">ההתחברות עם Google נועדה למנוע הצבעות בוטים: תחזית אחת לכל אדם. לא יעשה במייל שום שימוש. תבחרו כינוי, או שנבחר בשבילכם.</p>
 			<GoogleButton clientId={data.config.googleClientId} />
 		</div>
 	{:else}
@@ -269,7 +269,7 @@
 							<b class="num" class:maj={blocs.oppWith >= MAJORITY}>{blocs.oppWith}</b>
 						</div>
 						<div class="bl sub faint">
-							<span></span><span>כולל עמך ישראל</span><b class="num" class:maj={blocs.oppWithout >= MAJORITY}>{blocs.oppWithout}</b>
+							<span></span><span>עמך ישראל (כשאינה בגוש נתניהו)</span><b class="num">{blocs.amcha}</b>
 						</div>
 						<div class="bl">
 							<span class="dot" style="background: var(--neither)"></span>

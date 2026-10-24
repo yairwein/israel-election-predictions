@@ -18,13 +18,13 @@
 	});
 </script>
 
-<svelte:head><title>תחזית הקהל · תחזית הבחירות 2026</title></svelte:head>
+<svelte:head><title>ממוצע התחזיות · תחזית הבחירות 2026</title></svelte:head>
 
 <div class="container">
 	<section class="hero">
 		<div>
 			<div class="eyebrow">הבחירות לכנסת ה-26 · {fmtDateTime(s.electionAt)}</div>
-			<h1>תחזית הקהל</h1>
+			<h1>ממוצע התחזיות</h1>
 			<p class="muted">ממוצע כל התחזיות, עם טווחי טעות. מתעדכן כל 30 שניות.</p>
 		</div>
 		<div class="stats">
@@ -64,9 +64,9 @@
 
 		<div class="grid grid-2 section">
 			<div class="card">
-				<div class="eyebrow">הכנסת לפי ממוצע הקהל</div>
+				<div class="eyebrow">הכנסת לפי ממוצע התחזיות</div>
 				<h3 class="ttl">חלוקת 120 המנדטים</h3>
-				<Hemicycle seats={agg.meanAllocation} label="ממוצע הקהל" />
+				<Hemicycle seats={agg.meanAllocation} label="ממוצע התחזיות" />
 				<p class="note faint">הממוצע מעוגל לכנסת של 120, מפלגות שממוצען מתחת לאחוז החסימה לא מקבלות מושבים.</p>
 			</div>
 			<div class="card">
@@ -85,6 +85,9 @@
 					<div class="blocs">
 						<div><span class="dot" style="background: var(--coalition)"></span> גוש נתניהו <b class="num">{one(sc.coalitionSeats.mean)}</b> <span class="faint num">({one(sc.coalitionSeats.p10)}–{one(sc.coalitionSeats.p90)})</span></div>
 						<div><span class="dot" style="background: var(--opposition)"></span> אופוזיציה <b class="num">{one(sc.oppositionSeats.mean)}</b> <span class="faint num">({one(sc.oppositionSeats.p10)}–{one(sc.oppositionSeats.p90)})</span></div>
+						{#if sc.id === 'without_amcha'}
+							<div><span class="dot" style="background: #c49a2c"></span> עמך ישראל (בנפרד) <b class="num">{one(sc.unalignedSeats.mean)}</b> <span class="faint num">({one(sc.unalignedSeats.p10)}–{one(sc.unalignedSeats.p90)})</span></div>
+						{/if}
 						<div><span class="dot" style="background: var(--neither)"></span> מפלגות ערביות <b class="num">{one(sc.arabSeats.mean)}</b> <span class="faint num">({one(sc.arabSeats.p10)}–{one(sc.arabSeats.p90)})</span></div>
 					</div>
 				{/each}

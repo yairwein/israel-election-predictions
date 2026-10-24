@@ -11,7 +11,7 @@
 
 <div class="bars">
 	<div class="legend faint">
-		<span><i class="lg-mean"></i>ממוצע הקהל ± טעות</span>
+		<span><i class="lg-mean"></i>ממוצע התחזיות ± טעות</span>
 		<span><i class="lg-range"></i>טווח 10%–90%</span>
 		<span><i class="lg-poll"></i>ממוצע הסקרים</span>
 	</div>

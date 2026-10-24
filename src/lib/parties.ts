@@ -14,7 +14,8 @@ export interface Party {
 	color: string;
 	/**
 	 * coalition  – always counted in the Netanyahu bloc
-	 * swing      – counted in the Netanyahu bloc only in the "with" scenario (עמך ישראל)
+	 * swing      – in the Netanyahu bloc in the "with" scenario; in the "without" scenario it is
+	 *              counted separately (like the Arab parties), not in the opposition (עמך ישראל)
 	 * opposition – everyone else who is not an Arab party
 	 * arab       – excluded from both blocs
 	 */
@@ -72,6 +73,8 @@ export interface Scenario {
 	coalition: string[];
 	opposition: string[];
 	arab: string[];
+	/** outside both blocs but not Arab: עמך ישראל in the "without" scenario */
+	unaligned: string[];
 }
 
 export function getScenarios(): Scenario[] {
@@ -80,8 +83,8 @@ export function getScenarios(): Scenario[] {
 	const opp = PARTIES.filter((p) => p.bloc === 'opposition').map((p) => p.id);
 	const arab = PARTIES.filter((p) => p.bloc === 'arab').map((p) => p.id);
 	return [
-		{ id: 'with_amcha', coalition: [...core, ...swing], opposition: opp, arab },
-		{ id: 'without_amcha', coalition: core, opposition: [...opp, ...swing], arab }
+		{ id: 'with_amcha', coalition: [...core, ...swing], opposition: opp, arab, unaligned: [] },
+		{ id: 'without_amcha', coalition: core, opposition: opp, arab, unaligned: swing }
 	];
 }
 

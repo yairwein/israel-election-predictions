@@ -70,12 +70,26 @@ describe('computeAggregate', () => {
 		expect(withA.neither.count).toBe(2);
 
 		expect(withoutA.coalition.count).toBe(0); // 58 without Amcha
-		expect(withoutA.opposition.count).toBe(1); // 56 + 4 = 60, not 61; oppWins = 61
+		expect(withoutA.opposition.count).toBe(1); // only oppWins (61); Amcha is not added to the opposition
 		expect(withoutA.neither.count).toBe(3);
+		expect(withoutA.unalignedSeats.mean).toBe(1); // Amcha 4 in one of 4 predictions
+		expect(withA.unalignedSeats.mean).toBe(0);
 
 		for (const sc of a.scenarios) {
 			expect(sc.coalition.share + sc.opposition.share + sc.neither.share).toBeCloseTo(1, 10);
 		}
+	});
+
+	it('never counts Amcha in the opposition', () => {
+		// Opposition 57 + Amcha 4 = 61: must NOT count as an opposition majority without Amcha.
+		const k = knesset({ likud: 25, shas: 8, otzma: 7, rzp: 5, utj: 7, amcha: 4, yashar: 24, together: 14, democrats: 9, yb: 6, reservists: 4, joint: 7 });
+		expect(Object.values(k).reduce((a, b) => a + b, 0)).toBe(120);
+		const a = computeAggregate([{ seats: k }]);
+		const withoutA = a.scenarios.find((s) => s.id === 'without_amcha')!;
+		expect(withoutA.oppositionSeats.mean).toBe(57);
+		expect(withoutA.opposition.count).toBe(0);
+		expect(withoutA.neither.count).toBe(1);
+		expect(withoutA.unalignedSeats.mean).toBe(4);
 	});
 
 	it('computes party means, margins and turnout', () => {

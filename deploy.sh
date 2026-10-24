@@ -15,6 +15,7 @@ SA="${SA_NAME}@${PROJECT}.iam.gserviceaccount.com"
 IMAGE="gcr.io/${PROJECT}/${SERVICE}"
 ELECTION_AT="${ELECTION_AT:-2026-10-27T08:00:00+02:00}"
 LOCK_AT="${LOCK_AT:-2026-10-26T08:00:00+02:00}"
+GA_MEASUREMENT_ID="${GA_MEASUREMENT_ID:-G-8MQ850Q96V}"
 
 gc() { gcloud --project "$PROJECT" "$@"; }
 
@@ -43,7 +44,7 @@ deploy() {
 		--service-account "$SA" --allow-unauthenticated \
 		--cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 20 \
 		--cpu-boost \
-		--set-env-vars "STORAGE_BACKEND=gcs,GCS_BUCKET=${BUCKET},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID},ELECTION_AT=${ELECTION_AT},LOCK_AT=${LOCK_AT}" \
+		--set-env-vars "STORAGE_BACKEND=gcs,GCS_BUCKET=${BUCKET},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID},ELECTION_AT=${ELECTION_AT},LOCK_AT=${LOCK_AT},GA_MEASUREMENT_ID=${GA_MEASUREMENT_ID}" \
 		--set-secrets "SESSION_SECRET=${SERVICE}-session-secret:latest"
 	gc run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)'
 }

@@ -23,15 +23,17 @@
 			title: 'גוש האופוזיציה 61+',
 			sub: active === 'with_amcha'
 				? 'כל השאר, ללא המפלגות הערביות'
-				: 'כל השאר כולל עמך ישראל, ללא המפלגות הערביות',
+				: 'כל השאר, ללא המפלגות הערביות וללא עמך ישראל',
 			o: sc.opposition,
 			seats: sc.oppositionSeats,
 			color: 'var(--opposition)'
 		},
 		{
 			key: 'neither',
-			title: 'אין 61 בלי מפלגה ערבית',
-			sub: 'אף גוש לא מגיע ל-61 בלי שיתוף פעולה עם רע״ם או הרשימה המשותפת',
+			title: active === 'with_amcha' ? 'אין 61 בלי מפלגה ערבית' : 'אין 61 בלי מפלגה ערבית או עמך ישראל',
+			sub: active === 'with_amcha'
+				? 'אף גוש לא מגיע ל-61 בלי שיתוף פעולה עם רע״ם או הרשימה המשותפת'
+				: 'אף גוש לא מגיע ל-61 בלי רע״ם, הרשימה המשותפת או עמך ישראל (שנספרת בנפרד)',
 			o: sc.neither,
 			seats: sc.arabSeats,
 			color: 'var(--neither)'
@@ -42,7 +44,7 @@
 <div class="card odds">
 	<div class="head">
 		<div>
-			<div class="eyebrow">סיכויים לפי תחזית הקהל</div>
+			<div class="eyebrow">סיכויים לפי ממוצע התחזיות</div>
 			<h2>מי יגיע ל-61?</h2>
 		</div>
 		<div class="seg" role="tablist" aria-label="שיוך עמך ישראל">

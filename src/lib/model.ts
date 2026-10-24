@@ -8,7 +8,8 @@
  *    95% Wilson interval. The three outcomes are mutually exclusive and always sum to 100%:
  *      coalition  – the Netanyahu bloc has 61+
  *      opposition – the non-Arab opposition has 61+
- *      neither    – nobody reaches 61 without an Arab party
+ *      neither    – nobody reaches 61 on its own (without an Arab party, and in the
+ *                   "without Amcha" scenario also without Amcha Yisrael)
  */
 import {
 	PARTY_IDS,
@@ -66,6 +67,8 @@ export interface ScenarioStats {
 	coalitionSeats: Spread;
 	oppositionSeats: Spread;
 	arabSeats: Spread;
+	/** parties outside both blocs that are not Arab (Amcha in the "without" scenario) */
+	unalignedSeats: Spread;
 	/** how many predictions gave the Netanyahu bloc each number of seats (non-zero only) */
 	histogram: { seats: number; count: number }[];
 }
@@ -165,6 +168,7 @@ export function computeAggregate(preds: PredictionInput[]): Aggregate {
 		const coal = preds.map((p) => sumOf(p.seats, sc.coalition));
 		const opp = preds.map((p) => sumOf(p.seats, sc.opposition));
 		const arab = preds.map((p) => sumOf(p.seats, sc.arab));
+		const unaligned = preds.map((p) => sumOf(p.seats, sc.unaligned));
 		const c = coal.filter((x) => x >= MAJORITY).length;
 		const o = opp.filter((x) => x >= MAJORITY).length;
 		const counts = new Map<number, number>();
@@ -177,6 +181,7 @@ export function computeAggregate(preds: PredictionInput[]): Aggregate {
 			coalitionSeats: spread(coal),
 			oppositionSeats: spread(opp),
 			arabSeats: spread(arab),
+			unalignedSeats: spread(unaligned),
 			histogram: [...counts.entries()].sort((a, b) => a[0] - b[0]).map(([seats, count]) => ({ seats, count }))
 		};
 	});

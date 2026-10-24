@@ -50,6 +50,12 @@ export function sessionSecret(): string {
 	throw new Error('SESSION_SECRET (16+ characters) is required outside dev mode');
 }
 
+/** Google Analytics 4 measurement id (G-XXXX). Not loaded in dev mode. */
+export function gaMeasurementId(): string {
+	const id = (env.GA_MEASUREMENT_ID ?? '').trim();
+	return /^G-[A-Z0-9]{4,20}$/.test(id) && !isDevMode() ? id : '';
+}
+
 export function googleClientId(): string {
 	return env.GOOGLE_CLIENT_ID ?? '';
 }

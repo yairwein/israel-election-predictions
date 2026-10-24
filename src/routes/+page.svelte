@@ -18,11 +18,11 @@
 			<span class="pill">הבחירות לכנסת ה-26 · {fmtDateTime(s.electionAt)}</span>
 			<h1>מה יהיו התוצאות?<br /><span class="accent">חוכמת ההמונים.</span></h1>
 			<p class="lead">
-				חלקו 120 מנדטים בין המפלגות. אנחנו נשקלל את כל התחזיות ונחשב מה הסיכוי לכל גוש להגיע ל-61.
+				חלקו 120 מנדטים בין המפלגות. אנחנו נשקלל את כל התחזיות ונחשב מה הסיכוי של כל גוש להגיע ל-61.
 			</p>
 
 			{#if s.locked}
-				<div class="lock card">🔒 התחזיות ננעלו ב{fmtDateTime(s.lockAt)}. <a href="/results">לתחזית הקהל ←</a></div>
+				<div class="lock card">🔒 התחזיות ננעלו ב{fmtDateTime(s.lockAt)}. <a href="/results">לממוצע התחזיות ←</a></div>
 			{:else}
 				<div class="cta">
 					{#if canPredict}
@@ -30,10 +30,10 @@
 					{:else}
 						<GoogleButton clientId={data.config.googleClientId} />
 					{/if}
-					<a class="btn btn-ghost" href="/results">לתחזית הקהל</a>
+					<a class="btn btn-ghost" href="/results">לממוצע התחזיות</a>
 				</div>
 				{#if !canPredict}
-					<p class="faint small">ההתחברות עם Google רק מונעת ספאם. המייל לא מוצג לאף אחד, ובוחרים כינוי או מקבלים כינוי אקראי.</p>
+					<p class="faint small">ההתחברות עם Google נועדה למנוע הצבעות בוטים, ולא יעשה במייל שום שימוש. בוחרים כינוי או מקבלים כינוי אקראי.</p>
 				{/if}
 				<div class="countdown">
 					<div class="eyebrow">אפשר לשנות את התחזית עד הנעילה, 24 שעות לפני פתיחת הקלפיות</div>
@@ -44,7 +44,7 @@
 
 		<div class="visual card">
 			{#if s.aggregate && s.n > 0 && !s.hidden}
-				<Hemicycle seats={s.aggregate.meanAllocation} label="ממוצע הקהל" />
+				<Hemicycle seats={s.aggregate.meanAllocation} label="ממוצע התחזיות" />
 				<div class="summary">
 					<div><span class="num big" style="color: var(--coalition)">{pct(withAmcha?.coalition.share ?? 0)}</span><span>גוש נתניהו 61+</span></div>
 					<div><span class="num big" style="color: var(--opposition)">{pct(withAmcha?.opposition.share ?? 0)}</span><span>אופוזיציה 61+</span></div>
@@ -53,7 +53,7 @@
 				<p class="faint small center">על סמך {s.n.toLocaleString('he-IL')} תחזיות · כולל עמך ישראל בגוש נתניהו</p>
 			{:else}
 				<Hemicycle seats={POLL_AVERAGE} label="ממוצע הסקרים" />
-				<p class="faint small center">ממוצע 12 הסקרים האחרונים (16–22.10). תחזית הקהל תופיע כאן.</p>
+				<p class="faint small center">ממוצע 12 הסקרים האחרונים (16–22.10). ממוצע התחזיות יופיע כאן.</p>
 			{/if}
 		</div>
 	</section>
@@ -62,7 +62,7 @@
 		<div class="card">
 			<div class="n">1</div>
 			<h3>מתחברים</h3>
-			<p class="muted">עם חשבון Google, רק כדי שכל אחד ינחש פעם אחת. המייל נשאר פרטי.</p>
+			<p class="muted">עם חשבון Google, כדי למנוע הצבעות בוטים. לא יעשה במייל שום שימוש.</p>
 		</div>
 		<div class="card">
 			<div class="n">2</div>
@@ -71,8 +71,8 @@
 		</div>
 		<div class="card">
 			<div class="n">3</div>
-			<h3>רואים את תחזית הקהל</h3>
-			<p class="muted">ממוצע, טווחי טעות, והסיכוי של כל גוש להגיע ל-61.</p>
+			<h3>משפיעים על ממוצע התחזיות</h3>
+			<p class="muted">כל תחזית נכנסת לממוצע, לטווחי הטעות ולסיכוי של כל גוש להגיע ל-61.</p>
 		</div>
 	</section>
 </div>

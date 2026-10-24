@@ -1,5 +1,5 @@
 import { getRepo } from './repo';
-import { lockAt, isDevMode, googleClientId } from './config';
+import { lockAt, isDevMode, googleClientId, gaMeasurementId } from './config';
 import type { UserRecord } from './predictions';
 import { DEV_EMAIL } from './dev';
 
@@ -16,10 +16,11 @@ export interface AppConfig {
 	googleClientId: string;
 	devMode: boolean;
 	lockAt: string;
+	gaId: string;
 }
 
 export function appConfig(): AppConfig {
-	return { googleClientId: googleClientId(), devMode: isDevMode(), lockAt: lockAt().toISOString() };
+	return { googleClientId: googleClientId(), devMode: isDevMode(), lockAt: lockAt().toISOString(), gaId: gaMeasurementId() };
 }
 
 export async function meView(locals: App.Locals, withHistory = false): Promise<MeView> {

@@ -2,7 +2,7 @@
 
 People sign in with Google, split the 120 Knesset seats between the parties, and see the crowd's combined forecast: average seats per party with error margins, the number of forecasters, predicted turnout, and the chance that each bloc reaches 61.
 
-SvelteKit (Svelte 5) · Node adapter · Google Identity Services · Cloud Storage · Cloud Run. Hebrew, RTL, built mobile-first.
+SvelteKit (Svelte 5) · Node adapter · Google Identity Services · Cloud Storage · Cloud Run. Hebrew, RTL, built mobile-first. The forecast is public; signing in is needed only to vote.
 
 ## Features
 
@@ -27,6 +27,7 @@ See `.env.example`.
 | `SESSION_SECRET` | 16+ chars; signs session cookies and derives user ids. |
 | `STORAGE_BACKEND` | `local` (`DATA_DIR`, default `./data`) or `gcs` (`GCS_BUCKET`, optional `GCS_PREFIX`) |
 | `ELECTION_AT`, `LOCK_AT` | ISO 8601 with offset. `LOCK_AT` defaults to 24h before `ELECTION_AT`. |
+| `GA_MEASUREMENT_ID` | Google Analytics 4 id (`G-…`). Not loaded in dev mode. |
 | `RESULTS_HIDDEN_UNTIL` | optional: hide the totals until this time |
 | `NODE_ENV=dev` | login optional, see below. Ignored on Cloud Run. |
 
