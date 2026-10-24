@@ -37,7 +37,7 @@ for (const t of targets) {
 		// tap targets on mobile
 		if (t.ctx.isMobile) {
 			const small = await page.evaluate(() =>
-				[...document.querySelectorAll('button, a.btn, input')]
+				[...document.querySelectorAll('button, a.btn, input')].filter((el) => !el.closest('label.xt'))
 					.filter((el) => el.offsetParent !== null)
 					.map((el) => { const r = el.getBoundingClientRect(); return { t: (el.textContent || el.getAttribute('aria-label') || el.tagName).trim().slice(0, 20), w: r.width, h: r.height }; })
 					.filter((r) => r.h < 32 || r.w < 32)

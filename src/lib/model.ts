@@ -3,7 +3,10 @@
  *
  * Every saved prediction is one full 120-seat Knesset. The model treats the set of
  * predictions as the crowd's belief distribution:
- *  - party seats: mean, 95% margin of error of the mean, median and 10th–90th percentile range
+ *  - party seats and turnout: a trimmed mean by default (the highest and lowest TRIM of the predictions
+ *    for that party are set aside, the rest averaged), so a few extreme predictions can't move it;
+ *    the plain mean is kept too for the "include extremes" view. Plus a 95% margin, median and
+ *    10th–90th percentile range
  *  - bloc outcomes: the share of predictions in which each outcome happens, with a
  *    95% Wilson interval. The three outcomes are mutually exclusive and always sum to 100%:
  *      coalition  – the Netanyahu bloc has 61+
@@ -34,11 +37,20 @@ export interface Interval {
 	hi: number;
 }
 
+export interface Center {
+	mean: number;
+	/** 95% margin of error of that mean (± seats or points) */
+	margin: number;
+}
+
 export interface PartyStats {
 	id: string;
+	/** trimmed mean (extremes set aside); the default everywhere */
 	mean: number;
-	/** 95% margin of error of the mean (± seats) */
+	/** 95% margin of error of the trimmed mean (± seats) */
 	margin: number;
+	/** plain mean of all predictions, extremes included */
+	full: Center;
 	median: number;
 	p10: number;
 	p90: number;
@@ -77,9 +89,13 @@ export interface Aggregate {
 	n: number;
 	parties: PartyStats[];
 	scenarios: ScenarioStats[];
-	turnout: { n: number; mean: number; margin: number; p10: number; p90: number } | null;
-	/** the mean forecast rounded to a 120-seat Knesset (threshold applied) */
+	turnout: { n: number; mean: number; margin: number; full: Center; p10: number; p90: number } | null;
+	/** the trimmed-mean forecast rounded to a 120-seat Knesset (threshold applied) */
 	meanAllocation: Seats;
+	/** the same with plain means, extremes included */
+	fullAllocation: Seats;
+	/** share of predictions set aside at each end per party / for turnout */
+	trim: number;
 }
 
 export function mean(xs: number[]): number {
@@ -101,6 +117,34 @@ export function quantile(xs: number[], q: number): number {
 	const lo = Math.floor(pos);
 	const hi = Math.ceil(pos);
 	return s[lo] + (s[hi] - s[lo]) * (pos - lo);
+}
+
+/** Share set aside at each end for the trimmed mean: 10% lowest + 10% highest. */
+export const TRIM = 0.1;
+
+/**
+ * Trimmed mean: sort, drop floor(n·trim) values at each end, average the rest.
+ * With fewer than 10 values nothing is dropped. Also returns the kept values for the margin.
+ */
+export function trimmed(xs: number[], trim = TRIM): { mean: number; kept: number[] } {
+	const s = [...xs].sort((a, b) => a - b);
+	const k = Math.floor(s.length * trim);
+	const kept = k > 0 ? s.slice(k, s.length - k) : s;
+	return { mean: mean(kept), kept };
+}
+
+/** 95% margin of a trimmed mean, using the winsorized standard deviation (Tukey–McLaughlin). */
+export function trimmedMargin(xs: number[], trim = TRIM): number {
+	const n = xs.length;
+	if (n < 2) return 0;
+	const s = [...xs].sort((a, b) => a - b);
+	const k = Math.floor(n * trim);
+	const h = n - 2 * k;
+	if (h < 2) return 0;
+	const w = s.map((x, i) => (i < k ? s[k] : i >= n - k ? s[n - k - 1] : x));
+	// Standard error of the trimmed mean ≈ s_w / ((1 − 2γ)·√n), with γ the share actually trimmed.
+	const g = k / n;
+	return (1.96 * stdev(w)) / ((1 - 2 * g) * Math.sqrt(n));
 }
 
 /** 95% Wilson score interval for a proportion k/n. */
@@ -155,8 +199,9 @@ export function computeAggregate(preds: PredictionInput[]): Aggregate {
 		const xs = preds.map((p) => p.seats[id] ?? 0);
 		return {
 			id,
-			mean: mean(xs),
-			margin: margin95(xs),
+			mean: trimmed(xs).mean,
+			margin: trimmedMargin(xs),
+			full: { mean: mean(xs), margin: margin95(xs) },
 			median: quantile(xs, 0.5),
 			p10: quantile(xs, 0.1),
 			p90: quantile(xs, 0.9),
@@ -188,9 +233,26 @@ export function computeAggregate(preds: PredictionInput[]): Aggregate {
 
 	const t = preds.map((p) => p.turnout).filter((x): x is number => typeof x === 'number');
 	const turnout = t.length
-		? { n: t.length, mean: mean(t), margin: margin95(t), p10: quantile(t, 0.1), p90: quantile(t, 0.9) }
+		? {
+				n: t.length,
+				mean: trimmed(t).mean,
+				margin: trimmedMargin(t),
+				full: { mean: mean(t), margin: margin95(t) },
+				p10: quantile(t, 0.1),
+				p90: quantile(t, 0.9)
+			}
 		: null;
 
+	const empty = Object.fromEntries(PARTY_IDS.map((id) => [id, 0]));
 	const means: Seats = Object.fromEntries(parties.map((p) => [p.id, p.mean]));
-	return { n, parties, scenarios, turnout, meanAllocation: n ? allocate(means) : Object.fromEntries(PARTY_IDS.map((id) => [id, 0])) };
+	const fullMeans: Seats = Object.fromEntries(parties.map((p) => [p.id, p.full.mean]));
+	return {
+		n,
+		parties,
+		scenarios,
+		turnout,
+		meanAllocation: n ? allocate(means) : empty,
+		fullAllocation: n ? allocate(fullMeans) : empty,
+		trim: TRIM
+	};
 }

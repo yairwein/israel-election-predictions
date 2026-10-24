@@ -9,11 +9,17 @@
 	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
 	import { scenario } from '$lib/scenario.svelte';
 	import ShareButtons from '$lib/components/ShareButtons.svelte';
+	import ExtremesToggle from '$lib/components/ExtremesToggle.svelte';
+	import { extremes } from '$lib/extremes.svelte';
 	import { fmtDateTime, fmtShort, one } from '$lib/format';
 
 	let { data } = $props();
 	const s = $derived(data.summary);
 	const agg = $derived(s.aggregate);
+	const allocation = $derived(agg ? (extremes.include ? agg.fullAllocation : agg.meanAllocation) : null);
+	const turnoutMean = $derived(agg?.turnout ? (extremes.include ? agg.turnout.full.mean : agg.turnout.mean) : 0);
+	const turnoutMargin = $derived(agg?.turnout ? (extremes.include ? agg.turnout.full.margin : agg.turnout.margin) : 0);
+	const trimPct = $derived(Math.round((agg?.trim ?? 0.1) * 100));
 	const lockDay = $derived(
 		new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric' }).format(new Date(s.lockAt))
 	);
@@ -43,10 +49,10 @@
 			</div>
 			{#if agg?.turnout}
 				<div class="stat">
-					<div class="v"><span class="num">{one(agg.turnout.mean)}%</span></div>
+					<div class="v"><span class="num">{one(turnoutMean)}%</span></div>
 					<div class="l">
 						אחוז הצבעה צפוי
-						{#if agg.turnout.n > 1 && agg.turnout.margin >= 0.05}<span class="num faint">±{one(agg.turnout.margin)}</span>{/if}
+						{#if agg.turnout.n > 1 && turnoutMargin >= 0.05}<span class="num faint">±{one(turnoutMargin)}</span>{/if}
 					</div>
 				</div>
 			{/if}
@@ -61,6 +67,10 @@
 			</div>
 		</div>
 	</section>
+
+	{#if agg && s.n > 0 && !s.hidden}
+		<div class="xtrow"><ExtremesToggle {trimPct} /></div>
+	{/if}
 
 	{#if s.hidden}
 		<div class="card empty">
@@ -83,7 +93,7 @@
 			<div class="card">
 				<div class="eyebrow">הכנסת לפי ממוצע התחזיות</div>
 				<h3 class="ttl">חלוקת 120 המנדטים</h3>
-				<Hemicycle seats={agg.meanAllocation} label="ממוצע התחזיות" legend />
+				<Hemicycle seats={allocation ?? agg.meanAllocation} label="ממוצע התחזיות" legend />
 				<p class="note faint">הממוצע מעוגל לכנסת של 120, מפלגות שממוצען מתחת לאחוז החסימה לא מקבלות מושבים.</p>
 			</div>
 			<div class="card">
@@ -105,7 +115,7 @@
 		<div class="card section">
 			<div class="eyebrow">לפי מפלגה</div>
 			<h3 class="ttl">מנדטים צפויים</h3>
-			<PartyBars parties={agg.parties} />
+			<PartyBars parties={agg.parties} includeExtremes={extremes.include} />
 		</div>
 
 		<div class="card section">
@@ -154,6 +164,9 @@
 	.ttl { font-size: 1.15rem; font-weight: 700; margin: 2px 0 14px; }
 	.note { font-size: 0.78rem; margin: 10px 0 0; }
 	.tgl { margin-bottom: 14px; }
+	.xtrow {
+		margin: 18px 0 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+	}
 	.dist { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
 	.dist summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--muted); margin-bottom: 10px; }
 	.recent { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 24px; }

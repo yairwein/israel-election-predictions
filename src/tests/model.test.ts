@@ -123,3 +123,39 @@ describe('Noam', () => {
 		expect(a.scenarios[0].coalitionSeats.mean).toBe(55);
 	});
 });
+
+import { trimmed, trimmedMargin, TRIM } from '../lib/model';
+describe('trimmed mean (extremes set aside)', () => {
+	it('drops 10% at each end once there are 10+ values', () => {
+		const xs = [20, 21, 21, 22, 22, 22, 23, 23, 24, 40]; // one troll at 40
+		expect(trimmed(xs).mean).toBeCloseTo((21 + 21 + 22 + 22 + 22 + 23 + 23 + 24) / 8, 10);
+		expect(trimmed(xs).kept).toHaveLength(8);
+		expect(TRIM).toBe(0.1);
+	});
+	it('keeps everything with fewer than 10 values', () => {
+		expect(trimmed([1, 2, 30]).mean).toBe(11);
+	});
+	it('a single extreme prediction moves the plain mean but barely the trimmed one', () => {
+		const honest = Array.from({ length: 99 }, (_, i) => 20 + (i % 5));
+		const withTroll = [...honest, 40];
+		const plainShift = mean(withTroll) - mean(honest);
+		const trimShift = trimmed(withTroll).mean - trimmed(honest).mean;
+		expect(plainShift).toBeGreaterThan(0.15);
+		expect(Math.abs(trimShift)).toBeLessThan(0.05);
+	});
+	it('has a sensible margin', () => {
+		const xs = Array.from({ length: 100 }, (_, i) => 20 + (i % 5));
+		const m = trimmedMargin(xs);
+		expect(m).toBeGreaterThan(0);
+		expect(m).toBeLessThan(1);
+		expect(trimmedMargin([5])).toBe(0);
+	});
+	it('the aggregate exposes both views', () => {
+		const a = computeAggregate([{ seats: POLL_AVERAGE, turnout: 70 }, { seats: POLL_AVERAGE, turnout: 72 }]);
+		const likud = a.parties.find((p) => p.id === 'likud')!;
+		expect(likud.full.mean).toBe(POLL_AVERAGE.likud);
+		expect(likud.mean).toBe(POLL_AVERAGE.likud);
+		expect(a.turnout?.full.mean).toBe(71);
+		expect(Object.values(a.fullAllocation).reduce((x, y) => x + y, 0)).toBe(120);
+	});
+});

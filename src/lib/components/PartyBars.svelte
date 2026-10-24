@@ -3,15 +3,19 @@
 	import { PARTY_BY_ID, POLL_AVERAGE_RAW } from '$lib/parties';
 	import { one, pct } from '$lib/format';
 
-	let { parties }: { parties: PartyStats[] } = $props();
-	const sorted = $derived([...parties].sort((a, b) => b.mean - a.mean));
+	let { parties, includeExtremes = false }: { parties: PartyStats[]; includeExtremes?: boolean } = $props();
+	// The value shown: trimmed mean by default, plain mean when extremes are included.
+	const view = $derived(
+		parties.map((p) => ({ ...p, mean: includeExtremes ? p.full.mean : p.mean, margin: includeExtremes ? p.full.margin : p.margin }))
+	);
+	const sorted = $derived([...view].sort((a, b) => b.mean - a.mean));
 	const max = $derived(Math.max(30, ...parties.map((p) => p.p90), ...Object.values(POLL_AVERAGE_RAW)));
 	const x = (v: number) => `${(v / max) * 100}%`;
 </script>
 
 <div class="bars">
 	<div class="legend faint">
-		<span><i class="lg-mean"></i>ממוצע התחזיות ± טעות</span>
+		<span><i class="lg-mean"></i>{includeExtremes ? 'ממוצע כל התחזיות' : 'ממוצע בלי קיצוניות'} ± טעות</span>
 		<span><i class="lg-range"></i>טווח 10%–90%</span>
 		<span><i class="lg-poll"></i>ממוצע הסקרים</span>
 	</div>
