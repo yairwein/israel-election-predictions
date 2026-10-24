@@ -12,6 +12,12 @@
 	let { data } = $props();
 	const s = $derived(data.summary);
 	const agg = $derived(s.aggregate);
+	const lockDay = $derived(
+		new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric' }).format(new Date(s.lockAt))
+	);
+	const lockTime = $derived(
+		new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }).format(new Date(s.lockAt))
+	);
 
 	onMount(() => {
 		const t = setInterval(() => invalidate('app:summary'), 30_000);
@@ -30,18 +36,26 @@
 		</div>
 		<div class="stats">
 			<div class="stat">
-				<div class="v num">{s.n.toLocaleString('he-IL')}</div>
+				<div class="v"><span class="num">{s.n.toLocaleString('he-IL')}</span></div>
 				<div class="l">חזאים</div>
 			</div>
 			{#if agg?.turnout}
 				<div class="stat">
-					<div class="v num">{one(agg.turnout.mean)}%</div>
-					<div class="l">אחוז הצבעה צפוי <span class="num faint">±{one(agg.turnout.margin)}</span></div>
+					<div class="v"><span class="num">{one(agg.turnout.mean)}%</span></div>
+					<div class="l">
+						אחוז הצבעה צפוי
+						{#if agg.turnout.n > 1 && agg.turnout.margin >= 0.05}<span class="num faint">±{one(agg.turnout.margin)}</span>{/if}
+					</div>
 				</div>
 			{/if}
 			<div class="stat">
-				<div class="v">{s.locked ? '🔒' : '✍️'}</div>
-				<div class="l">{s.locked ? 'התחזיות נעולות' : `ננעל ${fmtShort(s.lockAt)}`}</div>
+				{#if s.locked}
+					<div class="v">🔒</div>
+					<div class="l">התחזיות נעולות</div>
+				{:else}
+					<div class="v"><span class="num">{lockDay}</span></div>
+					<div class="l">ננעל ב-<span class="num">{lockTime}</span></div>
+				{/if}
 			</div>
 		</div>
 	</section>
@@ -118,9 +132,12 @@
 	.hero { display: flex; justify-content: space-between; align-items: end; gap: 20px; padding: 36px 0 8px; flex-wrap: wrap; }
 	h1 { font-size: 2.4rem; font-weight: 800; margin: 4px 0; }
 	.stats { display: flex; gap: 12px; flex-wrap: wrap; }
-	.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 16px; min-width: 110px; }
-	.stat .v { font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
-	.stat .l { font-size: 0.8rem; color: var(--muted); }
+	.stat {
+		background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 120px;
+		display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; text-align: center;
+	}
+	.stat .v { font-size: 1.6rem; font-weight: 800; line-height: 1.1; height: 1.8rem; display: flex; align-items: center; }
+	.stat .l { font-size: 0.8rem; color: var(--muted); line-height: 1.3; }
 	.empty { text-align: center; padding: 48px 22px; margin: 28px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 	.ttl { font-size: 1.15rem; font-weight: 700; margin: 2px 0 14px; }
 	.note { font-size: 0.78rem; margin: 10px 0 0; }
@@ -136,8 +153,8 @@
 		.hero { padding-top: 20px; }
 		h1 { font-size: 1.8rem; }
 		.stats { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-		.stat { min-width: 0; padding: 8px 10px; }
-		.stat .v { font-size: 1.25rem; }
+		.stat { min-width: 0; padding: 10px 6px; }
+		.stat .v { font-size: 1.3rem; height: 1.5rem; }
 		.stat .l { font-size: 0.72rem; }
 		.recent { grid-template-columns: 1fr; }
 	}
