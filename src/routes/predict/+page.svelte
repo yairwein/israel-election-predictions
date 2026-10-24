@@ -6,7 +6,7 @@
 	import Countdown from '$lib/components/Countdown.svelte';
 	import GoogleButton from '$lib/components/GoogleButton.svelte';
 	import {
-		PARTIES, POLL_AVERAGE, TOTAL_SEATS, MAJORITY, MIN_SEATS, getScenarios, sumOf, emptySeats, type Seats
+		PARTIES, PARTY_IDS, PARTY_BY_ID, POLL_AVERAGE, TOTAL_SEATS, MAJORITY, MIN_SEATS, getScenarios, sumOf, emptySeats, type Seats
 	} from '$lib/parties';
 	import { validateSeats } from '$lib/validate';
 	import { fmtDateTime, fmtShort } from '$lib/format';
@@ -15,6 +15,7 @@
 	import ShareButtons from '$lib/components/ShareButtons.svelte';
 	import TurnoutPicker from '$lib/components/TurnoutPicker.svelte';
 	import { shareText, sharePath } from '$lib/share';
+	import { partyOrder } from '$lib/order';
 
 	let { data } = $props();
 	const me = $derived(data.me);
@@ -34,6 +35,10 @@
 	let turnout = $state<string>(initial?.turnout != null ? String(initial.turnout) : '');
 	let saving = $state(false);
 	let message = $state<{ kind: 'ok' | 'err'; text: string } | null>(null);
+
+	// Random order per person (seeded by their public id) to avoid position bias.
+	// Stable for that person, so coming back to update shows the same order.
+	const orderedParties = $derived(partyOrder(data.me.publicId ?? 'anon', PARTY_IDS).map((id) => PARTY_BY_ID[id]));
 
 	const total = $derived(Object.values(seats).reduce((a, b) => a + b, 0));
 	const remaining = $derived(TOTAL_SEATS - total);
@@ -220,7 +225,7 @@
 				</div>
 
 				<ul class="parties">
-					{#each PARTIES as p (p.id)}
+					{#each orderedParties as p (p.id)}
 						{@const v = seats[p.id] ?? 0}
 						<li class:zero={v === 0}>
 							<span class="bar" style="width: {(v / 40) * 100}%; background: {p.color}"></span>
