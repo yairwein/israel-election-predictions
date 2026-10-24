@@ -1,9 +1,11 @@
 <script lang="ts">
 	/**
 	 * How each network wants to be shared to, on the web:
-	 *  - X: the web intent https://x.com/intent/post?text&url. On phones it is a plain link in the same
-	 *    tab: iOS/Android hand x.com links to the X app (universal/app links) only on a direct
-	 *    navigation, not inside window.open, and an in-app browser blocks popups entirely.
+	 *  - X: on phones, the app's own scheme twitter://post?message= opens the compose screen directly
+	 *    (the x.com web intent goes through an "open in app" page that fails in the app). Android uses
+	 *    an intent:// link with the web intent as browser_fallback_url; iOS falls back to the web intent
+	 *    if the page is still visible after a moment (app not installed). Desktop: the web intent
+	 *    https://twitter.com/intent/tweet in a centered popup.
 	 *  - Facebook: https://www.facebook.com/sharer/sharer.php?u= (url only; Facebook ignores text and
 	 *    builds the card from og: tags). Same rule: plain link on phones, centered popup on desktop.
 	 *  - Instagram: there is no web share URL and no web "share to Instagram Stories" API (that needs
@@ -23,15 +25,23 @@
 	let note = $state('');
 	let busy = $state(false);
 	let mobile = $state(false);
+	let android = $state(false);
 	let canShareFiles = $state(false);
 	let canShareLinks = $state(false);
 	let storyPreview = $state(false);
 
-	const xHref = $derived(`https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+	const xHref = $derived(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+	const xMessage = $derived(encodeURIComponent(`${text} ${url}`));
+	const xApp = $derived(
+		android
+			? `intent://post?message=${xMessage}#Intent;scheme=twitter;package=com.twitter.android;S.browser_fallback_url=${encodeURIComponent(xHref)};end`
+			: `twitter://post?message=${xMessage}`
+	);
 	const fbHref = $derived(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
 
 	onMount(() => {
 		mobile = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+		android = /Android/i.test(navigator.userAgent);
 		canShareLinks = typeof navigator.share === 'function';
 		try {
 			canShareFiles = !!navigator.canShare?.({ files: [new File([''], 'x.png', { type: 'image/png' })] });
@@ -48,6 +58,25 @@
 		const top = window.screenY + (window.outerHeight - h) / 2;
 		const win = window.open(href, 'share', `width=${w},height=${h},left=${left},top=${top}`);
 		if (!win) location.href = href; // popup blocked: go there directly
+	}
+
+	/** Phones: open the X app's compose screen; if the app isn't there, go to the web intent. */
+	function shareX(e: MouseEvent) {
+		if (!mobile) return desktopPopup(e, xHref);
+		e.preventDefault();
+		let left = false;
+		const onHide = () => {
+			if (document.visibilityState === 'hidden') left = true;
+		};
+		document.addEventListener('visibilitychange', onHide);
+		window.addEventListener('pagehide', onHide);
+		const timer = setTimeout(() => {
+			document.removeEventListener('visibilitychange', onHide);
+			window.removeEventListener('pagehide', onHide);
+			if (!left && document.visibilityState === 'visible') location.href = xHref;
+		}, 1600);
+		window.addEventListener('pagehide', () => clearTimeout(timer), { once: true });
+		location.href = xApp;
 	}
 
 	// The story image is fetched ahead of time: iOS opens the share sheet only if share() is called
@@ -107,7 +136,7 @@
 <div class="share">
 	<a
 		class="sbtn x" href={xHref} target={mobile ? undefined : '_blank'} rel="noopener noreferrer"
-		onclick={(e) => desktopPopup(e, xHref)} aria-label="שיתוף ב-X"
+		data-app={xApp} onclick={shareX} aria-label="שיתוף ב-X"
 	>
 		<svg class="xlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
 	</a>

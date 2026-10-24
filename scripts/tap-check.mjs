@@ -27,14 +27,31 @@ for (const [name, dev] of [['iphone', devices['iPhone 13']], ['android', devices
 	const page = await signedInPredict(ctx, name);
 	await page.waitForTimeout(300);
 
-	for (const [label, host] of [['שיתוף ב-X', 'x.com'], ['שיתוף בפייסבוק', 'facebook.com']]) {
+	// X: the app link opens the compose screen; Android via intent:// with the web intent as fallback.
+	const xa = page.locator('#share a[aria-label="שיתוף ב-X"]');
+	const app = await xa.getAttribute('data-app');
+	if (name === 'android') {
+		if (!/^intent:\/\/post\?message=.+#Intent;scheme=twitter;package=com\.twitter\.android;S\.browser_fallback_url=https%3A%2F%2Ftwitter\.com%2Fintent%2Ftweet.+;end$/.test(app)) fails.push(`android X app link ${app}`);
+	} else if (!/^twitter:\/\/post\?message=.+/.test(app)) fails.push(`iphone X app link ${app}`);
+	const msg = decodeURIComponent(new URL(app.replace(/^intent:/, 'x:').split('#')[0]).searchParams.get('message') ?? '');
+	if (!msg.includes('גוש נתניהו') || !/\/p\/[A-Za-z0-9_-]+\?v=\d+$/.test(msg)) fails.push(`X message ${msg}`);
+	console.log(name, 'X app link →', app.slice(0, 60));
+
+	// Without the X app installed (as here), the page must fall back to the web intent.
+	for (const [label, host] of [['שיתוף ב-X', 'twitter.com|x.com'], ['שיתוף בפייסבוק', 'facebook.com']]) {
 		const a = page.locator(`#share a[aria-label="${label}"]`);
 		const target = await a.getAttribute('target');
 		if (target === '_blank') fails.push(`${name} ${label}: target=_blank on mobile (app links will not open)`);
 		const popup = page.waitForEvent('popup', { timeout: 2500 }).then(() => true).catch(() => false);
-		const nav = page.waitForURL((u) => u.hostname.endsWith(host), { timeout: 6000 }).then(() => true).catch(() => false);
+		const seen = [];
+		const onReq = (r) => { if (r.isNavigationRequest()) seen.push(r.url()); };
+		page.on('request', onReq);
+		const nav = page.waitForEvent('framenavigated', { predicate: (f) => host.split('|').some((h) => new URL(f.url()).hostname.endsWith(h)), timeout: 8000 })
+			.then(() => true)
+			.catch(() => seen.some((u) => host.split('|').some((h) => u.includes(h))));
 		await a.tap();
 		const [p, n] = await Promise.all([popup, nav]);
+		page.off('request', onReq);
 		if (p) fails.push(`${name} ${label}: opened a popup on mobile`);
 		if (!n) fails.push(`${name} ${label}: did not navigate to ${host}`);
 		console.log(name, label, '→', page.url().slice(0, 60));

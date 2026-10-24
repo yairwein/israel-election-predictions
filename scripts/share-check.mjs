@@ -20,7 +20,7 @@ await page.locator('#share').screenshot({ path: `${out}/share-card.png` });
 const xHref = await page.locator('#share a[aria-label="שיתוף ב-X"]').getAttribute('href');
 const fbHref = await page.locator('#share a[aria-label="שיתוף בפייסבוק"]').getAttribute('href');
 const xu = new URL(xHref), fu = new URL(fbHref);
-if (xu.origin + xu.pathname !== 'https://x.com/intent/post') fails.push(`X href ${xHref}`);
+if (xu.origin + xu.pathname !== 'https://twitter.com/intent/tweet') fails.push(`X href ${xHref}`);
 const sharedUrl = xu.searchParams.get('url');
 if (!/\/p\/[A-Za-z0-9_-]+\?v=\d+$/.test(sharedUrl ?? '')) fails.push(`X url param ${sharedUrl}`);
 if (!xu.searchParams.get('text')?.includes('גוש נתניהו')) fails.push('X text missing blocs');
