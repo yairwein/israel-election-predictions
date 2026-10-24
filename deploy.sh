@@ -13,7 +13,6 @@ DOMAIN="${DOMAIN:-elections.yairwein.com}"
 SA_NAME="${SERVICE}-run"
 SA="${SA_NAME}@${PROJECT}.iam.gserviceaccount.com"
 IMAGE="gcr.io/${PROJECT}/${SERVICE}"
-GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID (OAuth web client id)}"
 ELECTION_AT="${ELECTION_AT:-2026-10-27T08:00:00+02:00}"
 LOCK_AT="${LOCK_AT:-2026-10-26T08:00:00+02:00}"
 
@@ -37,6 +36,7 @@ setup() {
 }
 
 deploy() {
+	: "${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID (OAuth web client id)}"
 	gc builds submit --tag "$IMAGE" .
 	gc run deploy "$SERVICE" \
 		--image "$IMAGE" --region "$REGION" --platform managed \
