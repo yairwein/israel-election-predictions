@@ -1,5 +1,4 @@
 import { env } from '$env/dynamic/private';
-import { DEFAULT_ELECTION_AT, defaultLockAt } from '$lib/time';
 
 function parseDate(v: string | undefined): Date | null {
 	if (!v) return null;
@@ -24,13 +23,20 @@ export function isDevMode(): boolean {
 	return true;
 }
 
-export function electionAt(): Date {
-	return parseDate(env.ELECTION_AT) ?? new Date(DEFAULT_ELECTION_AT);
+function requiredDate(name: 'ELECTION_AT' | 'LOCK_AT'): Date {
+	const d = parseDate(env[name]);
+	if (!d) throw new Error(`${name} is required (ISO 8601 with offset, e.g. 2026-10-27T07:00:00+02:00)`);
+	return d;
 }
 
-/** Predictions lock 12 hours before the polls open (Mon 19:00), unless LOCK_AT is set. */
+/** When the polls open. Required. */
+export function electionAt(): Date {
+	return requiredDate('ELECTION_AT');
+}
+
+/** When predictions lock. Required. */
 export function lockAt(): Date {
-	return parseDate(env.LOCK_AT) ?? defaultLockAt(electionAt());
+	return requiredDate('LOCK_AT');
 }
 
 /** Optional: hide the totals until this time (e.g. when the polls close). */

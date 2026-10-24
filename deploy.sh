@@ -3,23 +3,35 @@
 #   ./deploy.sh            build + deploy
 #   ./deploy.sh setup      one-time: bucket, service account, secret, then build + deploy
 #   ./deploy.sh domain     map $DOMAIN to the service (domain must be verified; add the DNS record it prints)
+#
+# Settings: PROJECT REGION SERVICE BUCKET DOMAIN GOOGLE_CLIENT_ID ELECTION_AT LOCK_AT PUBLIC_ORIGIN
+#           [GA_MEASUREMENT_ID], from the environment or deploy.env.
 set -euo pipefail
 
-PROJECT="${PROJECT:-chinese-plo}"
-REGION="${REGION:-us-central1}"
-SERVICE="${SERVICE:-election-predictions}"
-BUCKET="${BUCKET:-election-predictions-2026}"
-DOMAIN="${DOMAIN:-elections.yairwein.com}"
+# All settings come from the environment, or from a local, git-ignored deploy.env
+# (copy deploy.env.example). Nothing is hard-coded here.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$HERE/deploy.env" ]; then set -a; . "$HERE/deploy.env"; set +a; fi
+
+require() {
+	local missing=()
+	for v in "$@"; do [ -n "${!v:-}" ] || missing+=("$v"); done
+	if [ ${#missing[@]} -gt 0 ]; then
+		echo "Missing settings: ${missing[*]}" >&2
+		echo "Set them in the environment or in deploy.env (see deploy.env.example)." >&2
+		exit 1
+	fi
+}
+
+require PROJECT REGION SERVICE
 SA_NAME="${SERVICE}-run"
 SA="${SA_NAME}@${PROJECT}.iam.gserviceaccount.com"
 IMAGE="gcr.io/${PROJECT}/${SERVICE}"
-ELECTION_AT="${ELECTION_AT:-2026-10-27T07:00:00+02:00}"
-LOCK_AT="${LOCK_AT:-2026-10-26T19:00:00+02:00}"
-GA_MEASUREMENT_ID="${GA_MEASUREMENT_ID:-G-K6TQFYTFCK}"
 
 gc() { gcloud --project "$PROJECT" "$@"; }
 
 setup() {
+	require BUCKET
 	gc services enable run.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com storage.googleapis.com
 	# Bucket: private, uniform access, versioned so nothing is ever lost.
 	if ! gc storage buckets describe "gs://${BUCKET}" >/dev/null 2>&1; then
@@ -37,19 +49,22 @@ setup() {
 }
 
 deploy() {
-	: "${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID (OAuth web client id)}"
+	require BUCKET GOOGLE_CLIENT_ID ELECTION_AT LOCK_AT PUBLIC_ORIGIN
+	local env_vars="STORAGE_BACKEND=gcs,GCS_BUCKET=${BUCKET},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID},ELECTION_AT=${ELECTION_AT},LOCK_AT=${LOCK_AT},PUBLIC_ORIGIN=${PUBLIC_ORIGIN}"
+	if [ -n "${GA_MEASUREMENT_ID:-}" ]; then env_vars="${env_vars},GA_MEASUREMENT_ID=${GA_MEASUREMENT_ID}"; fi
 	gc builds submit --tag "$IMAGE" .
 	gc run deploy "$SERVICE" \
 		--image "$IMAGE" --region "$REGION" --platform managed \
 		--service-account "$SA" --allow-unauthenticated \
 		--cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 20 \
 		--cpu-boost \
-		--set-env-vars "STORAGE_BACKEND=gcs,GCS_BUCKET=${BUCKET},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID},ELECTION_AT=${ELECTION_AT},LOCK_AT=${LOCK_AT},GA_MEASUREMENT_ID=${GA_MEASUREMENT_ID},PUBLIC_ORIGIN=https://${DOMAIN}" \
+		--set-env-vars "$env_vars" \
 		--set-secrets "SESSION_SECRET=${SERVICE}-session-secret:latest"
 	gc run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)'
 }
 
 domain() {
+	require DOMAIN
 	gc beta run domain-mappings describe --domain "$DOMAIN" --region "$REGION" >/dev/null 2>&1 \
 		|| gc beta run domain-mappings create --service "$SERVICE" --domain "$DOMAIN" --region "$REGION"
 	echo "DNS record to add (if not present):"
