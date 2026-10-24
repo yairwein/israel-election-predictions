@@ -32,6 +32,7 @@ export const PARTIES: Party[] = [
 	{ id: 'shas', he: 'ש״ס', en: 'Shas', leaderHe: 'אריה דרעי', leaderEn: 'Aryeh Deri', color: '#25365f', bloc: 'coalition' },
 	{ id: 'otzma', he: 'עוצמה יהודית', en: 'Otzma Yehudit', leaderHe: 'איתמר בן גביר', leaderEn: 'Itamar Ben-Gvir', color: '#e8892b', bloc: 'coalition' },
 	{ id: 'rzp', he: 'הציונות הדתית', en: 'Religious Zionism', leaderHe: 'בצלאל סמוטריץ׳', leaderEn: 'Bezalel Smotrich', color: '#6f8f2f', bloc: 'coalition' },
+	{ id: 'noam', he: 'נועם', en: 'Noam', leaderHe: 'אבי מעוז', leaderEn: 'Avi Maoz', color: '#8a1538', bloc: 'coalition' },
 	{ id: 'utj', he: 'יהדות התורה', en: 'United Torah Judaism', leaderHe: 'יעקב אשר', leaderEn: "Ya'akov Asher", color: '#4b4f58', bloc: 'coalition' },
 	{ id: 'amcha', he: 'עמך ישראל', en: 'Amcha Yisrael', leaderHe: 'עופר וינטר', leaderEn: 'Ofer Winter', color: '#c49a2c', bloc: 'swing' },
 	{ id: 'yashar', he: 'ישר!', en: 'Yashar', leaderHe: 'גדי איזנקוט', leaderEn: 'Gadi Eisenkot', color: '#0f9f9a', bloc: 'opposition' },
@@ -56,12 +57,12 @@ export type Seats = Record<string, number>;
  * optional starting point of the prediction form.
  */
 export const POLL_AVERAGE: Seats = {
-	likud: 24, shas: 8, otzma: 8, rzp: 7, utj: 8, amcha: 0,
+	likud: 24, shas: 8, otzma: 8, rzp: 7, noam: 0, utj: 8, amcha: 0,
 	yashar: 21, together: 13, democrats: 9, yb: 7, reservists: 0, haredi: 0,
 	raam: 6, joint: 9
 };
 export const POLL_AVERAGE_RAW: Seats = {
-	likud: 23.25, shas: 8.17, otzma: 7.75, rzp: 6.75, utj: 7.5, amcha: 1.0,
+	likud: 23.25, shas: 8.17, otzma: 7.75, rzp: 6.75, noam: 0.3, utj: 7.5, amcha: 1.0,
 	yashar: 20.83, together: 12.5, democrats: 9.08, yb: 7.08, reservists: 2.0, haredi: 0,
 	raam: 5.58, joint: 8.5
 };

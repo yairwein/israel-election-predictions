@@ -11,7 +11,7 @@ SvelteKit (Svelte 5) · Node adapter · Google Identity Services · Cloud Storag
 - **Lock:** saving is refused from `LOCK_AT`, set to Mon 26 Oct 2026 19:00 Israel time (UTC+2), 12 hours before polls open at 07:00. Until then, people can change their prediction as often as they like.
 - **Every vote is kept:** each save writes an append-only history object, and only the latest version counts in the model.
 - **Totals page (`/results`):**
-  - Netanyahu bloc 61+ (Likud, Shas, Otzma Yehudit, Religious Zionism, UTJ), with and without Amcha Yisrael
+  - Netanyahu bloc 61+ (Likud, Shas, Otzma Yehudit, Religious Zionism, Noam, UTJ), with and without Amcha Yisrael
   - Opposition 61+ (everyone else except Ra'am and the Joint List)
   - Nobody reaches 61 without an Arab party
   - Each outcome is the share of predictions in which it happens, with a 95% Wilson interval. The three are mutually exclusive and sum to 100%.

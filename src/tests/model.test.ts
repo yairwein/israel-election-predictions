@@ -108,3 +108,18 @@ describe('computeAggregate', () => {
 	});
 });
 
+
+describe('Noam', () => {
+	it('counts in the Netanyahu bloc in both views', () => {
+		const k = knesset({ likud: 25, shas: 8, otzma: 7, rzp: 5, noam: 4, utj: 7, yashar: 24, together: 14, democrats: 9, yb: 6, raam: 4, joint: 7 });
+		expect(Object.values(k).reduce((a, b) => a + b, 0)).toBe(120);
+		const a = computeAggregate([{ seats: k }]);
+		for (const sc of a.scenarios) expect(sc.coalitionSeats.mean).toBe(56);
+	});
+	it('older predictions without a noam field count it as 0', () => {
+		const { noam, ...old } = POLL_AVERAGE;
+		const a = computeAggregate([{ seats: old as Seats }]);
+		expect(a.parties.find((p) => p.id === 'noam')!.mean).toBe(0);
+		expect(a.scenarios[0].coalitionSeats.mean).toBe(55);
+	});
+});

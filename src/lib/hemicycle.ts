@@ -28,7 +28,7 @@ export function hemicycle(total = 120, rows = 8, inner = 0.38): { points: SeatPo
  * chart and the list starts there. The legend uses the same order.
  */
 export const SPECTRUM_RTL = [
-	'otzma', 'rzp', 'likud', 'shas', 'utj', 'amcha', 'haredi', 'reservists', 'yb',
+	'noam', 'otzma', 'rzp', 'likud', 'shas', 'utj', 'amcha', 'haredi', 'reservists', 'yb',
 	'yashar', 'together', 'democrats', 'raam', 'joint'
 ];
 
