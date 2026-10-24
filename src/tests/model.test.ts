@@ -107,3 +107,13 @@ describe('computeAggregate', () => {
 		expect(a.parties.map((p) => p.id)).toEqual(PARTY_IDS);
 	});
 });
+
+import { defaultLockAt, DEFAULT_ELECTION_AT } from '../lib/time';
+describe('lock time', () => {
+	it('locks at 19:00 Israel time the evening before polls open at 07:00', () => {
+		const lock = defaultLockAt(new Date(DEFAULT_ELECTION_AT));
+		expect(lock.toISOString()).toBe('2026-10-26T17:00:00.000Z');
+		const il = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(lock);
+		expect(il).toBe('Mon 19:00');
+	});
+});

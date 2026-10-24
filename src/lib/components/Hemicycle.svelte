@@ -1,19 +1,10 @@
 <script lang="ts">
-	import { hemicycle, SPECTRUM_RTL } from '$lib/hemicycle';
+	import { hemicycle, seatColors, SPECTRUM_RTL } from '$lib/hemicycle';
 	import { PARTY_BY_ID, TOTAL_SEATS, type Seats } from '$lib/parties';
 
 	let { seats, label = '', legend = false }: { seats: Seats; label?: string; legend?: boolean } = $props();
 	const geo = hemicycle(TOTAL_SEATS);
-	// Seats are laid out left → right on screen, so fill them with the spectrum reversed:
-	// the first party in the right-to-left order ends up on the far right.
-	const order = [...SPECTRUM_RTL].reverse();
-
-	const colors = $derived.by(() => {
-		const out: string[] = [];
-		for (const id of order) for (let i = 0; i < (seats[id] ?? 0); i++) out.push(PARTY_BY_ID[id]?.color ?? '#999');
-		while (out.length < TOTAL_SEATS) out.push('var(--border)');
-		return out.slice(0, TOTAL_SEATS);
-	});
+	const colors = $derived(seatColors(seats, (id) => PARTY_BY_ID[id]?.color ?? '#999', 'var(--border)', TOTAL_SEATS));
 	const total = $derived(Object.values(seats).reduce((a, b) => a + b, 0));
 	const items = $derived(SPECTRUM_RTL.filter((id) => (seats[id] ?? 0) > 0).map((id) => ({ ...PARTY_BY_ID[id], n: seats[id] })));
 </script>

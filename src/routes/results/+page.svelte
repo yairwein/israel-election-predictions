@@ -7,6 +7,7 @@
 	import Histogram from '$lib/components/Histogram.svelte';
 	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
 	import { scenario } from '$lib/scenario.svelte';
+	import ShareButtons from '$lib/components/ShareButtons.svelte';
 	import { fmtDateTime, fmtShort, one } from '$lib/format';
 
 	let { data } = $props();
@@ -106,6 +107,17 @@
 			<div class="eyebrow">לפי מפלגה</div>
 			<h3 class="ttl">מנדטים צפויים</h3>
 			<PartyBars parties={agg.parties} />
+		</div>
+
+		<div class="card section">
+			<div class="eyebrow">שתפו</div>
+			<h3 class="ttl">הזמינו חברים להוסיף תחזית</h3>
+			<ShareButtons
+				url={`${data.origin}/results`}
+				text={`ממוצע התחזיות לבחירות 2026, על סמך ${s.n.toLocaleString('he-IL')} תחזיות. מה התחזית שלכם?`}
+				image="/og/average"
+				filename="elections-2026-average.png"
+			/>
 		</div>
 
 		{#if data.recent.length}

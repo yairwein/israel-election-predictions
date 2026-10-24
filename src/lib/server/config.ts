@@ -28,7 +28,7 @@ export function electionAt(): Date {
 	return parseDate(env.ELECTION_AT) ?? new Date(DEFAULT_ELECTION_AT);
 }
 
-/** Predictions lock exactly 24 hours before the election starts, unless LOCK_AT is set. */
+/** Predictions lock 12 hours before the polls open (Mon 19:00), unless LOCK_AT is set. */
 export function lockAt(): Date {
 	return parseDate(env.LOCK_AT) ?? defaultLockAt(electionAt());
 }
@@ -54,6 +54,18 @@ export function sessionSecret(): string {
 export function gaMeasurementId(): string {
 	const id = (env.GA_MEASUREMENT_ID ?? '').trim();
 	return /^G-[A-Z0-9]{4,20}$/.test(id) && !isDevMode() ? id : '';
+}
+
+/**
+ * Public origin for absolute URLs (share links, og:image). PUBLIC_ORIGIN wins; otherwise the
+ * request origin, with https assumed for any non-local host (Cloud Run and tunnels end TLS upstream).
+ */
+export function publicOrigin(url: URL): string {
+	const fixed = (env.PUBLIC_ORIGIN ?? '').trim().replace(/\/$/, '');
+	if (fixed) return fixed;
+	// adapter-node reports https unless told otherwise, so decide by host: local is plain http.
+	const local = /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(url.hostname);
+	return `${local ? 'http:' : 'https:'}//${url.host}`;
 }
 
 export function googleClientId(): string {

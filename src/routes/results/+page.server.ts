@@ -1,9 +1,10 @@
+import { publicOrigin } from '$lib/server/config';
 import type { PageServerLoad } from './$types';
 import { getSummary, publicSummary } from '$lib/server/aggregate';
 import { getRepo } from '$lib/server/repo';
 import { sumOf, getScenarios } from '$lib/parties';
 
-export const load: PageServerLoad = async ({ depends }) => {
+export const load: PageServerLoad = async ({ depends, url }) => {
 	depends('app:summary');
 	const summary = publicSummary(await getSummary());
 	let recent: { nickname: string; coalition: number; coalitionCore: number; opposition: number; arab: number; updatedAt: string }[] = [];
@@ -21,5 +22,10 @@ export const load: PageServerLoad = async ({ depends }) => {
 				updatedAt: p.updatedAt
 			}));
 	}
-	return { summary, recent };
+	return {
+		summary,
+		recent,
+		origin: publicOrigin(url),
+		og: { title: 'ממוצע התחזיות · תחזית הבחירות 2026', image: '/og/average', path: '/results' }
+	};
 };

@@ -3,7 +3,9 @@
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
-	"engines": { "node": ">=20" },
+	"engines": {
+		"node": ">=20"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -26,6 +28,12 @@
 	},
 	"dependencies": {
 		"@google-cloud/storage": "^7.19.0",
+		"@resvg/resvg-js": "^2.6.2",
 		"google-auth-library": "^10.6.1"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yairwein/israel-election-predictions.git"
 	}
 }

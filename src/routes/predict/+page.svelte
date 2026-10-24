@@ -12,6 +12,8 @@
 	import { fmtDateTime, fmtShort } from '$lib/format';
 	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
 	import { scenario } from '$lib/scenario.svelte';
+	import ShareButtons from '$lib/components/ShareButtons.svelte';
+	import { shareText, sharePath } from '$lib/share';
 
 	let { data } = $props();
 	const me = $derived(data.me);
@@ -93,7 +95,7 @@
 		try {
 			await api('PUT', '/api/me/prediction', { seats, turnout: turnout === '' ? null : Number(turnout) });
 			await invalidateAll();
-			message = { kind: 'ok', text: 'התחזית נשמרה. אפשר לעדכן עד הנעילה.' };
+			message = { kind: 'ok', text: 'התחזית נשמרה. אפשר לעדכן עד הנעילה, ולשתף למטה.' };
 		} catch (e) {
 			message = { kind: 'err', text: (e as Error).message };
 		} finally {
@@ -293,6 +295,24 @@
 			</aside>
 		</div>
 
+		{#if data.me.prediction && data.me.publicId}
+			{@const p = data.me.prediction}
+			<div class="card section sharecard" id="share">
+				<div class="eyebrow">שתפו את התחזית שלכם</div>
+				<h3 class="ttl">{dirty ? 'התחזית השמורה שלך' : 'התחזית שלך מוכנה לשיתוף'}</h3>
+				<a href={sharePath(data.me.publicId, p.version)} class="preview" aria-label="עמוד התחזית הציבורי">
+					<img src={`/og/p/${data.me.publicId}?v=${p.version}`} alt="תמונת השיתוף של התחזית" width="1200" height="630" loading="lazy" />
+				</a>
+				<ShareButtons
+					url={`${data.origin}${sharePath(data.me.publicId, p.version)}`}
+					text={shareText(p.seats, me.nickname, true)}
+					image={`/og/p/${data.me.publicId}?v=${p.version}`}
+					filename="my-elections-2026-prediction.png"
+				/>
+				<p class="faint small center">בשיתוף מופיעים רק הכינוי והמנדטים. אחרי עדכון, הקישור מציג את הגרסה האחרונה.</p>
+			</div>
+		{/if}
+
 		{#if !locked}
 			<div class="actionbar" role="region" aria-label="שמירה">
 				<div class="ab-info">
@@ -394,6 +414,9 @@
 	.err { color: var(--bad); font-size: 0.88rem; margin: 0; }
 	.okmsg { color: var(--good); font-size: 0.88rem; margin: 0; text-align: center; }
 	.ttl { font-size: 1.15rem; font-weight: 700; margin: 2px 0 10px; }
+	.sharecard { display: flex; flex-direction: column; gap: 12px; }
+	.sharecard .ttl { margin-bottom: 0; }
+	.preview img { width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid var(--border); }
 	.history { list-style: none; padding: 0; margin: 0; }
 	.history li { display: flex; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; flex-wrap: wrap; }
 	.actionbar, .toast { display: none; }

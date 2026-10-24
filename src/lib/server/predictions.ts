@@ -219,6 +219,14 @@ export class PredictionRepo {
 		return data;
 	}
 
+	/** One public prediction by its public id (current version), or null. */
+	async byPublicId(publicId: string): Promise<PublicPrediction | null> {
+		if (!/^[A-Za-z0-9_-]{6,16}$/.test(publicId)) return null;
+		const hit = (await this.all()).find((p) => p.publicId === publicId);
+		if (hit) return hit;
+		return (await this.all(true)).find((p) => p.publicId === publicId) ?? null;
+	}
+
 	/** Rebuilds the public index from users/ (repair tool). */
 	async rebuildIndex(): Promise<number> {
 		const paths = await this.store.list('users/');

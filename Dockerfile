@@ -12,13 +12,13 @@ WORKDIR /app
 COPY --from=build /app/build build/
 COPY --from=build /app/node_modules node_modules/
 COPY --from=build /app/package.json .
+COPY --from=build /app/assets assets/
 
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOST=0.0.0.0
 # Cloud Run terminates TLS; trust its forwarding headers.
 ENV PROTOCOL_HEADER=x-forwarded-proto
-ENV HOST_HEADER=x-forwarded-host
 ENV ADDRESS_HEADER=x-forwarded-for
 ENV XFF_DEPTH=1
 

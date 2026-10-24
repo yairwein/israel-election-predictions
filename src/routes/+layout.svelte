@@ -8,6 +8,17 @@
 	let { data, children } = $props();
 	let menuOpen = $state(false);
 
+	// Pages may provide `og` from their load; otherwise the crowd average card is used.
+	const og = $derived.by(() => {
+		const o = (page.data as { og?: { title?: string; description?: string; image?: string; path?: string } }).og ?? {};
+		return {
+			title: o.title ?? 'תחזית הבחירות 2026 · ממוצע התחזיות',
+			description: o.description ?? 'כמה מנדטים יקבל כל גוש? הוסיפו תחזית וראו את ממוצע התחזיות.',
+			image: data.origin + (o.image ?? '/og/average'),
+			url: data.origin + (o.path ?? page.url.pathname)
+		};
+	});
+
 	const links = [
 		{ href: '/', label: 'ראשי' },
 		{ href: '/predict', label: 'התחזית שלי' },
@@ -23,10 +34,24 @@
 </script>
 
 <svelte:head>
-	<title>תחזית הבחירות 2026 · חוכמת ההמונים</title>
-	<meta name="description" content="נחשו את תוצאות הבחירות לכנסת ה-26 וראו את התחזית המשוקללת של כולם." />
-	<meta property="og:title" content="תחזית הבחירות 2026 · חוכמת ההמונים" />
-	<meta property="og:description" content="כמה מנדטים יקבל כל גוש? הוסיפו תחזית וראו את ממוצע התחזיות." />
+	<title>{og.title}</title>
+	<meta name="description" content={og.description} />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="תחזית הבחירות 2026" />
+	<meta property="og:locale" content="he_IL" />
+	<meta property="og:title" content={og.title} />
+	<meta property="og:description" content={og.description} />
+	<meta property="og:url" content={og.url} />
+	<meta property="og:image" content={og.image} />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content={og.title} />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:creator" content="@yairwein" />
+	<meta name="twitter:title" content={og.title} />
+	<meta name="twitter:description" content={og.description} />
+	<meta name="twitter:image" content={og.image} />
+	<link rel="canonical" href={og.url} />
 	{#if data.config.gaId}
 		<!-- Google tag (gtag.js). GA4 enhanced measurement records client-side navigations. -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id={data.config.gaId}"></script>
@@ -71,6 +96,14 @@
 		אתר עצמאי, לא קשור לאף מפלגה. כתובת המייל משמשת למניעת הצבעות בוטים, ולא יעשה בה שום שימוש.
 		ממוצע התחזיות אינו סקר דעת קהל.
 	</p>
+	<div class="credits">
+		<span>פיתוח: <a href="https://x.com/yairwein" target="_blank" rel="noopener noreferrer" dir="ltr">@yairwein</a> ב-X</span>
+		<span aria-hidden="true">·</span>
+		<a href="https://github.com/yairwein/israel-election-predictions" target="_blank" rel="noopener noreferrer" class="gh">
+			<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
+			קוד פתוח ב-GitHub (MIT)
+		</a>
+	</div>
 </footer>
 
 <style>
@@ -92,6 +125,10 @@
 	.dev { background: #fff3d6; color: #8a5a00; }
 	.menu { display: none; }
 	main { min-height: calc(100vh - 200px); }
+	.credits { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+	.credits a { color: var(--muted); font-weight: 600; }
+	.credits a:hover { color: var(--text); }
+	.gh { display: inline-flex; align-items: center; gap: 6px; }
 	.foot { font-size: 0.82rem; padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--border); margin-top: 40px; }
 
 	.navout { display: none; }

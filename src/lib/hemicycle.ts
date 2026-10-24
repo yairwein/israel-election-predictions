@@ -31,3 +31,11 @@ export const SPECTRUM_RTL = [
 	'otzma', 'rzp', 'likud', 'shas', 'utj', 'amcha', 'haredi', 'reservists', 'yb',
 	'yashar', 'together', 'democrats', 'raam', 'joint'
 ];
+
+/** Seat colors in on-screen left → right order, so the first party of SPECTRUM_RTL lands on the far right. */
+export function seatColors(seats: Record<string, number>, colorOf: (id: string) => string, empty: string, total = 120): string[] {
+	const out: string[] = [];
+	for (const id of [...SPECTRUM_RTL].reverse()) for (let i = 0; i < (seats[id] ?? 0); i++) out.push(colorOf(id));
+	while (out.length < total) out.push(empty);
+	return out.slice(0, total);
+}

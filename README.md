@@ -8,7 +8,7 @@ SvelteKit (Svelte 5) · Node adapter · Google Identity Services · Cloud Storag
 
 - **Google sign-in, private email.** The ID token is verified on the server and exchanged for a signed, httpOnly session cookie. The email is stored only in the user's private record and never returned by any API. Publicly, people appear only by a nickname: one they choose (unique, case-insensitive) or a random Hebrew one ("שועל ממולח 42").
 - **Predictions:** 120 seats, each party 0 or ≥ 4 (3.25% threshold), plus an optional turnout guess. You can start from the poll average.
-- **Lock:** saving is refused from `LOCK_AT`, by default Mon 26 Oct 2026 08:00 Israel time (UTC+2), 24 hours before polls open. Until then, people can change their prediction as often as they like.
+- **Lock:** saving is refused from `LOCK_AT`, by default Mon 26 Oct 2026 19:00 Israel time (UTC+2), 12 hours before polls open at 07:00. Until then, people can change their prediction as often as they like.
 - **Every vote is kept:** each save writes an append-only history object, and only the latest version counts in the model.
 - **Totals page (`/results`):**
   - Netanyahu bloc 61+ (Likud, Shas, Otzma Yehudit, Religious Zionism, UTJ), with and without Amcha Yisrael
@@ -26,7 +26,7 @@ See `.env.example`.
 | `GOOGLE_CLIENT_ID` | OAuth *Web* client. Add each origin to **Authorized JavaScript origins**. |
 | `SESSION_SECRET` | 16+ chars; signs session cookies and derives user ids. |
 | `STORAGE_BACKEND` | `local` (`DATA_DIR`, default `./data`) or `gcs` (`GCS_BUCKET`, optional `GCS_PREFIX`) |
-| `ELECTION_AT`, `LOCK_AT` | ISO 8601 with offset. `LOCK_AT` defaults to 24h before `ELECTION_AT`. |
+| `ELECTION_AT`, `LOCK_AT` | ISO 8601 with offset. `LOCK_AT` defaults to 12h before `ELECTION_AT`. |
 | `GA_MEASUREMENT_ID` | Google Analytics 4 id (`G-…`). Not loaded in dev mode. |
 | `RESULTS_HIDDEN_UNTIL` | optional: hide the totals until this time |
 | `NODE_ENV=dev` | login optional, see below. Ignored on Cloud Run. |
