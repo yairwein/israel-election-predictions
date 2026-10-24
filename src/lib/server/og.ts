@@ -71,10 +71,50 @@ export function ogSvg({ title, subtitle, seats, footer, host }: OgInput): string
 </svg>`;
 }
 
-export function ogPng(input: OgInput): Buffer {
+/** Portrait 1080×1920 image for Instagram Stories (and WhatsApp status). */
+export function storySvg({ title, subtitle, seats, footer, host }: OgInput): string {
+	const SW = 1080, SH = 1920;
+	const geo = hemicycle(120);
+	const colors = seatColors(seats, (id) => PARTY_BY_ID[id]?.color ?? '#999', '#e3e7ef');
+	const cx = SW / 2, cy = 900, R = 430;
+	const dots = geo.points
+		.map((p, i) => `<circle cx="${(cx + p.x * R).toFixed(1)}" cy="${(cy + p.y * R).toFixed(1)}" r="${(geo.r * R).toFixed(1)}" fill="${colors[i]}"/>`)
+		.join('');
+	const right = SW - 110, left = 110;
+	const blocRows = blocLines(seats)
+		.map((b, i) => {
+			const y = 1100 + i * 92;
+			return `<circle cx="${right - 16}" cy="${y - 18}" r="16" fill="${b.color}"/>
+				<text x="${right - 52}" y="${y}" text-anchor="end" font-size="50" fill="#3b4252">${esc(rtl(b.label))}</text>
+				<text x="${left}" y="${y}" text-anchor="start" font-size="60" font-weight="800" fill="#121826">${b.seats}</text>`;
+		})
+		.join('');
+	const parties = SPECTRUM_RTL.filter((id) => (seats[id] ?? 0) > 0).map((id) => `${PARTY_BY_ID[id].he} ${seats[id]}`);
+	const rows: string[][] = [];
+	for (let i = 0; i < parties.length; i += 3) rows.push(parties.slice(i, i + 3));
+	const chips = rows
+		.map((r, i) => `<text x="${SW / 2}" y="${1450 + i * 52}" text-anchor="middle" font-size="34" fill="#5b6475">${esc(rtl(r.join('  ·  ')))}</text>`)
+		.join('');
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${SW}" height="${SH}" viewBox="0 0 ${SW} ${SH}">
+	<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf1fb"/><stop offset="1" stop-color="#f6f7fb"/></linearGradient></defs>
+	<rect width="${SW}" height="${SH}" fill="url(#bg)"/>
+	<rect x="60" y="250" width="${SW - 120}" height="1420" rx="56" fill="#ffffff" stroke="#e3e7ef" stroke-width="3"/>
+	<text x="${SW / 2}" y="170" text-anchor="middle" font-size="44" font-weight="800" fill="#1f5fad">${esc(rtl('תחזית הבחירות 2026'))}</text>
+	<text x="${SW / 2}" y="370" text-anchor="middle" font-size="76" font-weight="800" fill="#121826">${esc(rtl(title))}</text>
+	<text x="${SW / 2}" y="440" text-anchor="middle" font-size="40" fill="#5b6475">${esc(rtl(subtitle))}</text>
+	${dots}
+	<text x="${cx}" y="${cy - 30}" text-anchor="middle" font-size="110" font-weight="800" fill="#121826">120</text>
+	${blocRows}
+	${chips}
+	<text x="${SW / 2}" y="1780" text-anchor="middle" font-size="58" font-weight="800" fill="#1f5fad">${esc(rtl(footer))}</text>
+	<text x="${SW / 2}" y="1850" text-anchor="middle" font-size="44" font-weight="800" fill="#121826">${esc(host)}</text>
+</svg>`;
+}
+
+function render(svg: string, width: number): Buffer {
 	const dir = fontDir();
-	const r = new Resvg(ogSvg(input), {
-		fitTo: { mode: 'width', value: W },
+	const r = new Resvg(svg, {
+		fitTo: { mode: 'width', value: width },
 		font: {
 			fontFiles: [path.join(dir, 'Heebo-Regular.ttf'), path.join(dir, 'Heebo-ExtraBold.ttf')],
 			loadSystemFonts: false,
@@ -82,4 +122,12 @@ export function ogPng(input: OgInput): Buffer {
 		}
 	});
 	return r.render().asPng();
+}
+
+export function storyPng(input: OgInput): Buffer {
+	return render(storySvg(input), 1080);
+}
+
+export function ogPng(input: OgInput): Buffer {
+	return render(ogSvg(input), W);
 }

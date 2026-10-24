@@ -29,7 +29,7 @@
 	.hist { width: 100%; }
 	.cols { display: flex; align-items: flex-end; height: 120px; gap: 2px; border-bottom: 1px solid var(--border); }
 	.col { flex: 1; height: 100%; display: flex; align-items: flex-end; }
-	.b { width: 100%; background: var(--opposition); border-radius: 3px 3px 0 0; min-height: 0; transition: height 0.4s; }
+	.b { width: 100%; background: var(--neither); border-radius: 3px 3px 0 0; min-height: 0; transition: height 0.4s; }
 	.b.win { background: var(--coalition); }
 	.axis { position: relative; display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--faint); margin-top: 4px; }
 	.mid { position: absolute; transform: translateX(-50%); color: var(--text); font-weight: 700; }

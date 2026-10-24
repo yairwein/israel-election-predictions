@@ -31,7 +31,8 @@
 				url={`${data.origin}${sharePath(p.publicId, p.version)}`}
 				text={shareText(p.seats, p.nickname, true)}
 				image={`/og/p/${p.publicId}?v=${p.version}`}
-				filename="my-elections-2026-prediction.png"
+					story={`/og/p/${p.publicId}?v=${p.version}&format=story`}
+				filename="my-elections-2026-prediction"
 			/>
 			<a class="btn btn-ghost" href="/predict">עריכת התחזית</a>
 		{:else}

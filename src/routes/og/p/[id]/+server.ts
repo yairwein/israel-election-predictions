@@ -1,13 +1,14 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getRepo } from '$lib/server/repo';
-import { ogPng } from '$lib/server/og';
+import { ogPng, storyPng } from '$lib/server/og';
 import { publicOrigin } from '$lib/server/config';
 
 export const GET: RequestHandler = async ({ params, url }) => {
 	const p = await getRepo().byPublicId(params.id);
 	if (!p) error(404, 'not found');
-	const png = ogPng({
+	const render = url.searchParams.get('format') === 'story' ? storyPng : ogPng;
+	const png = render({
 		title: `התחזית של ${p.nickname}`,
 		subtitle: 'הבחירות לכנסת ה-26 · 27.10.2026',
 		seats: p.seats,

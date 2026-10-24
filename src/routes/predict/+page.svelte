@@ -307,7 +307,8 @@
 					url={`${data.origin}${sharePath(data.me.publicId, p.version)}`}
 					text={shareText(p.seats, me.nickname, true)}
 					image={`/og/p/${data.me.publicId}?v=${p.version}`}
-					filename="my-elections-2026-prediction.png"
+					story={`/og/p/${data.me.publicId}?v=${p.version}&format=story`}
+					filename="my-elections-2026-prediction"
 				/>
 				<p class="faint small center">בשיתוף מופיעים רק הכינוי והמנדטים. אחרי עדכון, הקישור מציג את הגרסה האחרונה.</p>
 			</div>

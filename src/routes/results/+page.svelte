@@ -5,6 +5,7 @@
 	import PartyBars from '$lib/components/PartyBars.svelte';
 	import Hemicycle from '$lib/components/Hemicycle.svelte';
 	import Histogram from '$lib/components/Histogram.svelte';
+	import BlocBalance from '$lib/components/BlocBalance.svelte';
 	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
 	import { scenario } from '$lib/scenario.svelte';
 	import ShareButtons from '$lib/components/ShareButtons.svelte';
@@ -86,19 +87,17 @@
 				<p class="note faint">הממוצע מעוגל לכנסת של 120, מפלגות שממוצען מתחת לאחוז החסימה לא מקבלות מושבים.</p>
 			</div>
 			<div class="card">
-				<div class="eyebrow">התפלגות התחזיות</div>
-				<h3 class="ttl">כמה מנדטים לגוש נתניהו?</h3>
+				<div class="eyebrow">ממוצע הגושים</div>
+				<h3 class="ttl">איך מתחלקים 120 המנדטים?</h3>
 				<div class="tgl"><ScenarioToggle full /></div>
-				{#each agg.scenarios.filter((x) => x.id === scenario.id) as sc}
-					<Histogram data={sc.histogram} />
-					<div class="blocs">
-						<div><span class="dot" style="background: var(--coalition)"></span> גוש נתניהו <b class="num">{one(sc.coalitionSeats.mean)}</b> <span class="faint num">({one(sc.coalitionSeats.p10)}–{one(sc.coalitionSeats.p90)})</span></div>
-						<div><span class="dot" style="background: var(--opposition)"></span> אופוזיציה <b class="num">{one(sc.oppositionSeats.mean)}</b> <span class="faint num">({one(sc.oppositionSeats.p10)}–{one(sc.oppositionSeats.p90)})</span></div>
-						{#if sc.id === 'without_amcha'}
-							<div><span class="dot" style="background: #c49a2c"></span> עמך ישראל (לא משוייכת) <b class="num">{one(sc.unalignedSeats.mean)}</b> <span class="faint num">({one(sc.unalignedSeats.p10)}–{one(sc.unalignedSeats.p90)})</span></div>
-						{/if}
-						<div><span class="dot" style="background: var(--neither)"></span> מפלגות ערביות <b class="num">{one(sc.arabSeats.mean)}</b> <span class="faint num">({one(sc.arabSeats.p10)}–{one(sc.arabSeats.p90)})</span></div>
-					</div>
+				{#each agg.scenarios.filter((x) => x.id === scenario.id) as sc (sc.id)}
+					<BlocBalance {sc} />
+					{#if s.n >= 10}
+						<details class="dist">
+							<summary>התפלגות: כמה מנדטים נתנו לגוש נתניהו</summary>
+							<Histogram data={sc.histogram} />
+						</details>
+					{/if}
 				{/each}
 			</div>
 		</div>
@@ -116,7 +115,8 @@
 				url={`${data.origin}/results`}
 				text={`ממוצע התחזיות לבחירות 2026, על סמך ${s.n.toLocaleString('he-IL')} תחזיות. מה התחזית שלכם?`}
 				image="/og/average"
-				filename="elections-2026-average.png"
+				story="/og/average?format=story"
+				filename="elections-2026-average"
 			/>
 		</div>
 
@@ -154,8 +154,8 @@
 	.ttl { font-size: 1.15rem; font-weight: 700; margin: 2px 0 14px; }
 	.note { font-size: 0.78rem; margin: 10px 0 0; }
 	.tgl { margin-bottom: 14px; }
-	.blocs { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; font-size: 0.92rem; }
-	.blocs div { display: flex; align-items: center; gap: 8px; }
+	.dist { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+	.dist summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--muted); margin-bottom: 10px; }
 	.recent { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 24px; }
 	.recent li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 	.nick { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
