@@ -74,6 +74,11 @@ export function publicOrigin(url: URL): string {
 	return `${local ? 'http:' : 'https:'}//${url.host}`;
 }
 
+/** OAuth client secret, for the redirect sign-in used in in-app browsers. Optional: without it that flow is off. */
+export function googleClientSecret(): string {
+	return env.GOOGLE_CLIENT_SECRET ?? '';
+}
+
 export function googleClientId(): string {
 	return env.GOOGLE_CLIENT_ID ?? '';
 }

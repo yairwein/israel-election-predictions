@@ -52,6 +52,11 @@ deploy() {
 	require BUCKET GOOGLE_CLIENT_ID ELECTION_AT LOCK_AT PUBLIC_ORIGIN
 	local env_vars="STORAGE_BACKEND=gcs,GCS_BUCKET=${BUCKET},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID},ELECTION_AT=${ELECTION_AT},LOCK_AT=${LOCK_AT},PUBLIC_ORIGIN=${PUBLIC_ORIGIN}"
 	if [ -n "${GA_MEASUREMENT_ID:-}" ]; then env_vars="${env_vars},GA_MEASUREMENT_ID=${GA_MEASUREMENT_ID}"; fi
+	local secrets="SESSION_SECRET=${SERVICE}-session-secret:latest"
+	# Optional OAuth client secret (redirect sign-in in in-app browsers): name it in OAUTH_CLIENT_SECRET_NAME.
+	if [ -n "${OAUTH_CLIENT_SECRET_NAME:-}" ]; then
+		secrets="${secrets},GOOGLE_CLIENT_SECRET=${OAUTH_CLIENT_SECRET_NAME}:latest"
+	fi
 	gc builds submit --tag "$IMAGE" .
 	gc run deploy "$SERVICE" \
 		--image "$IMAGE" --region "$REGION" --platform managed \
@@ -59,7 +64,7 @@ deploy() {
 		--cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 20 \
 		--cpu-boost \
 		--set-env-vars "$env_vars" \
-		--set-secrets "SESSION_SECRET=${SERVICE}-session-secret:latest"
+		--set-secrets "$secrets"
 	gc run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)'
 }
 

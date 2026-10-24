@@ -1,5 +1,5 @@
 import { getRepo } from './repo';
-import { lockAt, isDevMode, googleClientId, gaMeasurementId } from './config';
+import { lockAt, isDevMode, googleClientId, googleClientSecret, gaMeasurementId } from './config';
 import type { UserRecord } from './predictions';
 import { isCountable } from '$lib/validate';
 import { DEV_EMAIL } from './dev';
@@ -20,10 +20,12 @@ export interface AppConfig {
 	devMode: boolean;
 	lockAt: string;
 	gaId: string;
+	/** standard OAuth redirect sign-in is available (used in in-app browsers) */
+	oauthRedirect: boolean;
 }
 
 export function appConfig(): AppConfig {
-	return { googleClientId: googleClientId(), devMode: isDevMode(), lockAt: lockAt().toISOString(), gaId: gaMeasurementId() };
+	return { googleClientId: googleClientId(), devMode: isDevMode(), lockAt: lockAt().toISOString(), gaId: gaMeasurementId(), oauthRedirect: !!googleClientSecret() };
 }
 
 export async function meView(locals: App.Locals, withHistory = false): Promise<MeView> {
