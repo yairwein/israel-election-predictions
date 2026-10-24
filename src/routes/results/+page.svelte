@@ -39,7 +39,7 @@
 		<div class="stats">
 			<div class="stat">
 				<div class="v"><span class="num">{s.n.toLocaleString('he-IL')}</span></div>
-				<div class="l">חזאים</div>
+				<div class="l">חזאים וחזאיות</div>
 			</div>
 			{#if agg?.turnout}
 				<div class="stat">

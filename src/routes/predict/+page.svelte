@@ -13,6 +13,7 @@
 	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
 	import { scenario } from '$lib/scenario.svelte';
 	import ShareButtons from '$lib/components/ShareButtons.svelte';
+	import TurnoutPicker from '$lib/components/TurnoutPicker.svelte';
 	import { shareText, sharePath } from '$lib/share';
 
 	let { data } = $props();
@@ -241,14 +242,7 @@
 					{/each}
 				</ul>
 
-				<label class="turnout">
-					<span>אחוז הצבעה צפוי <span class="faint">(לא חובה)</span></span>
-					<span class="tin">
-						<input type="number" inputmode="decimal" min="40" max="95" step="0.1" placeholder="70.6" bind:value={turnout} disabled={locked} />
-						<span class="faint">%</span>
-					</span>
-					<span class="faint small">בבחירות 2022: 70.6%</span>
-				</label>
+				<TurnoutPicker bind:value={turnout} disabled={locked} />
 			</div>
 
 			<aside class="side">
@@ -398,9 +392,6 @@
 		background: var(--surface-2); font-weight: 700; font-size: 1.05rem; -moz-appearance: textfield; appearance: textfield;
 	}
 	.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-	.turnout { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-	.tin { display: inline-flex; align-items: center; gap: 4px; direction: ltr; }
-	.tin input { width: 80px; height: 36px; text-align: center; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
 	.small { font-size: 0.8rem; }
 	.center { text-align: center; margin: 8px 0 0; }
 	.sticky { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 12px; }
