@@ -15,6 +15,7 @@ const MESSAGES: Record<string, string> = {
 	unknown_party: 'מפלגה לא מוכרת',
 	invalid_value: 'מספר מנדטים לא תקין',
 	below_threshold: 'מפלגה שעוברת את אחוז החסימה מקבלת לפחות 4 מנדטים',
+	above_max: 'אפשר לתת למפלגה עד 40 מנדטים',
 	total_not_120: 'סך המנדטים חייב להיות 120'
 };
 

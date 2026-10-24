@@ -14,7 +14,7 @@
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import type { ObjectStore } from './storage/types';
 import type { Seats } from '$lib/parties';
-import { nicknameKey } from '$lib/validate';
+import { nicknameKey, isCountable } from '$lib/validate';
 import { randomNickname } from '$lib/nickname';
 
 export const SHARDS = 16;
@@ -208,7 +208,12 @@ export class PredictionRepo {
 		this.cache = null;
 	}
 
-	/** All current predictions (public fields only), cached briefly. */
+	/** Current predictions that follow the rules: the ones that count everywhere public. */
+	async counted(fresh = false): Promise<PublicPrediction[]> {
+		return (await this.all(fresh)).filter(isCountable);
+	}
+
+	/** All current predictions (public fields only), cached briefly. Includes ones that break the rules. */
 	async all(fresh = false): Promise<PublicPrediction[]> {
 		if (!fresh && this.cache && Date.now() - this.cache.at < this.cacheMs) return this.cache.data;
 		const shards = await Promise.all(
@@ -219,12 +224,12 @@ export class PredictionRepo {
 		return data;
 	}
 
-	/** One public prediction by its public id (current version), or null. */
+	/** One counted public prediction by its public id (current version), or null. */
 	async byPublicId(publicId: string): Promise<PublicPrediction | null> {
 		if (!/^[A-Za-z0-9_-]{6,16}$/.test(publicId)) return null;
-		const hit = (await this.all()).find((p) => p.publicId === publicId);
+		const hit = (await this.counted()).find((p) => p.publicId === publicId);
 		if (hit) return hit;
-		return (await this.all(true)).find((p) => p.publicId === publicId) ?? null;
+		return (await this.counted(true)).find((p) => p.publicId === publicId) ?? null;
 	}
 
 	/** Rebuilds the public index from users/ (repair tool). */

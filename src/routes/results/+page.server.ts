@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ depends, url }) => {
 	let recent: { nickname: string; coalition: number; coalitionCore: number; opposition: number; arab: number; updatedAt: string }[] = [];
 	if (!summary.hidden) {
 		const [withAmcha, withoutAmcha] = getScenarios();
-		recent = (await getRepo().all())
+		recent = (await getRepo().counted())
 			.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 			.slice(0, 30)
 			.map((p) => ({

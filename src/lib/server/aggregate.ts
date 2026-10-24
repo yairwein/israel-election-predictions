@@ -19,7 +19,7 @@ export async function getSummary(now = new Date()): Promise<Summary> {
 	if (cached && Date.now() - cached.at < 5_000) {
 		return { ...cached.value, locked: now >= lockAt(), hidden: resultsHidden(now) };
 	}
-	const preds = await getRepo().all();
+	const preds = await getRepo().counted();
 	const hidden = resultsHidden(now);
 	const value: Summary = {
 		aggregate: computeAggregate(preds),

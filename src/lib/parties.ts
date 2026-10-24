@@ -26,6 +26,8 @@ export const TOTAL_SEATS = 120;
 export const MAJORITY = 61;
 /** 3.25% threshold ≈ 3.9 seats, so a party that passes gets at least 4. */
 export const MIN_SEATS = 4;
+/** No party has come close to this since 1969; anything above is not a serious prediction. */
+export const MAX_SEATS = 40;
 
 export const PARTIES: Party[] = [
 	{ id: 'likud', he: 'הליכוד', en: 'Likud', leaderHe: 'בנימין נתניהו', leaderEn: 'Benjamin Netanyahu', color: '#1f5fad', bloc: 'coalition' },

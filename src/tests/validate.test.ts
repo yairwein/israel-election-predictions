@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateSeats, cleanNickname, nicknameKey } from '../lib/validate';
+import { validateSeats, cleanNickname, nicknameKey, isCountable } from '../lib/validate';
 import { POLL_AVERAGE } from '../lib/parties';
 
 describe('validateSeats', () => {
@@ -12,6 +12,8 @@ describe('validateSeats', () => {
 		expect(validateSeats({ ...POLL_AVERAGE, foo: 1 })).toEqual({ ok: false, error: 'unknown_party' });
 		expect(validateSeats({ ...POLL_AVERAGE, likud: 23.5 })).toEqual({ ok: false, error: 'invalid_value' });
 		expect(validateSeats({ ...POLL_AVERAGE, likud: -1 })).toEqual({ ok: false, error: 'invalid_value' });
+		expect(validateSeats({ ...POLL_AVERAGE, likud: 41, yashar: 4 })).toEqual({ ok: false, error: 'above_max' });
+		expect(validateSeats({ ...POLL_AVERAGE, likud: 40, yashar: 5 }).ok).toBe(true);
 		expect(validateSeats(null).ok).toBe(false);
 		expect(validateSeats([1, 2]).ok).toBe(false);
 	});
@@ -35,5 +37,16 @@ describe('nicknames', () => {
 	});
 	it('keys are case-insensitive', () => {
 		expect(nicknameKey('Yair  W')).toBe(nicknameKey('yair w'));
+	});
+});
+
+describe('isCountable', () => {
+	it('counts valid predictions and leaves out ones that break the rules', () => {
+		expect(isCountable({ seats: POLL_AVERAGE, turnout: 70 })).toBe(true);
+		expect(isCountable({ seats: POLL_AVERAGE, turnout: null })).toBe(true);
+		const all120 = Object.fromEntries(Object.keys(POLL_AVERAGE).map((k) => [k, 0]));
+		all120.haredi = 120;
+		expect(isCountable({ seats: all120 })).toBe(false);
+		expect(isCountable({ seats: POLL_AVERAGE, turnout: 95 })).toBe(false);
 	});
 });

@@ -6,7 +6,7 @@
 	import Countdown from '$lib/components/Countdown.svelte';
 	import GoogleButton from '$lib/components/GoogleButton.svelte';
 	import {
-		PARTIES, PARTY_IDS, PARTY_BY_ID, POLL_AVERAGE, TOTAL_SEATS, MAJORITY, MIN_SEATS, getScenarios, sumOf, emptySeats, type Seats
+		PARTIES, PARTY_IDS, PARTY_BY_ID, POLL_AVERAGE, TOTAL_SEATS, MAJORITY, MIN_SEATS, MAX_SEATS, getScenarios, sumOf, emptySeats, type Seats
 	} from '$lib/parties';
 	import { validateSeats } from '$lib/validate';
 	import { fmtDateTime, fmtShort } from '$lib/format';
@@ -59,7 +59,7 @@
 	});
 
 	function setSeat(id: string, v: number) {
-		v = Math.max(0, Math.min(TOTAL_SEATS, Math.round(v)));
+		v = Math.max(0, Math.min(MAX_SEATS, Math.round(v)));
 		if (v > 0 && v < MIN_SEATS) v = (seats[id] ?? 0) > v ? 0 : MIN_SEATS;
 		seats[id] = v;
 		message = null;
@@ -74,7 +74,7 @@
 	function onInput(id: string, e: Event) {
 		const raw = (e.target as HTMLInputElement).value;
 		const v = raw === '' ? 0 : Number(raw);
-		if (Number.isFinite(v)) seats[id] = Math.max(0, Math.min(TOTAL_SEATS, Math.round(v)));
+		if (Number.isFinite(v)) seats[id] = Math.max(0, Math.min(MAX_SEATS, Math.round(v)));
 		message = null;
 	}
 	function onBlur(id: string) {
@@ -158,7 +158,7 @@
 			<div class="eyebrow">התחזית שלי</div>
 			<h1>איך תיראה הכנסת ה-26?</h1>
 			<p class="muted">
-				חלקו 120 מנדטים. מפלגה שעוברת את אחוז החסימה (3.25%) מקבלת לפחות 4.
+				חלקו 120 מנדטים. מפלגה שעוברת את אחוז החסימה (3.25%) מקבלת לפחות 4, ולכל היותר 40.
 				{#if !locked}אפשר לעדכן עד {fmtDateTime(data.config.lockAt)}.{/if}
 			</p>
 		</div>
@@ -212,6 +212,14 @@
 			{/if}
 		</div>
 
+		{#if data.me.prediction && !data.me.counted}
+			<div class="card notcounted" role="alert">
+				<b>התחזית השמורה שלך לא נספרת בממוצע.</b>
+				היא לא עומדת בכללים: בין 4 ל-40 מנדטים לכל מפלגה שעוברת את אחוז החסימה.
+				{#if !locked}עדכנו ושמרו אותה, והיא תיכנס לממוצע.{/if}
+			</div>
+		{/if}
+
 		{#if locked}
 			<div class="card lockedmsg">🔒 התחזיות ננעלו ב{fmtDateTime(data.config.lockAt)}. {#if data.me.prediction}זו התחזית הסופית שלך.{:else}לא נשמרה תחזית.{/if}</div>
 		{/if}
@@ -237,11 +245,11 @@
 							<div class="stepper">
 								<button aria-label="הפחתה ל{p.he}" onclick={() => dec(p.id)} disabled={locked || v === 0}>−</button>
 								<input
-									type="number" inputmode="numeric" min="0" max="120" value={v} disabled={locked}
+									type="number" inputmode="numeric" min="0" max={MAX_SEATS} value={v} disabled={locked}
 									aria-label="מנדטים ל{p.he}"
 									oninput={(e) => onInput(p.id, e)} onblur={() => onBlur(p.id)}
 								/>
-								<button aria-label="הוספה ל{p.he}" onclick={() => inc(p.id)} disabled={locked || remaining <= 0 || (v === 0 && remaining < MIN_SEATS)}>+</button>
+								<button aria-label="הוספה ל{p.he}" onclick={() => inc(p.id)} disabled={locked || v >= MAX_SEATS || remaining <= 0 || (v === 0 && remaining < MIN_SEATS)}>+</button>
 							</div>
 						</li>
 					{/each}
@@ -284,7 +292,7 @@
 					</div>
 
 					<button class="btn btn-primary save" onclick={save} disabled={locked || !valid || saving || !dirty}>
-						{saving ? 'שומר…' : data.me.prediction ? (dirty ? 'עדכון התחזית' : 'נשמר ✓') : 'שמירת התחזית'}
+						{saving ? 'שומר…' : data.me.prediction ? (dirty ? 'עדכון התחזית' : data.me.counted ? 'נשמר ✓' : 'צריך לתקן') : 'שמירת התחזית'}
 					</button>
 					{#if message}<p class={message.kind === 'ok' ? 'okmsg' : 'err'}>{message.text}</p>{/if}
 					{#if data.me.prediction}
@@ -294,7 +302,7 @@
 			</aside>
 		</div>
 
-		{#if data.me.prediction && data.me.publicId}
+		{#if data.me.prediction && data.me.publicId && data.me.counted}
 			{@const p = data.me.prediction}
 			<div class="card section sharecard" id="share">
 				<div class="eyebrow">שתפו את התחזית שלכם</div>
@@ -328,7 +336,7 @@
 					</div>
 				</div>
 				<button class="btn btn-primary" onclick={save} disabled={!valid || saving || !dirty}>
-					{saving ? 'שומר…' : data.me.prediction ? (dirty ? 'עדכון' : 'נשמר ✓') : 'שמירה'}
+					{saving ? 'שומר…' : data.me.prediction ? (dirty ? 'עדכון' : data.me.counted ? 'נשמר ✓' : 'צריך לתקן') : 'שמירה'}
 				</button>
 			</div>
 			{#if message}<div class="toast {message.kind}" role="status">{message.text}</div>{/if}
@@ -372,6 +380,11 @@
 	.nickform { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 	.nickbtns { display: flex; gap: 8px; flex-wrap: wrap; }
 	.lockedmsg { margin-bottom: 16px; padding: 14px 20px; }
+	.notcounted {
+		margin-bottom: 16px; padding: 14px 20px; border-color: color-mix(in srgb, var(--warn) 45%, var(--border));
+		background: color-mix(in srgb, var(--warn) 8%, var(--surface)); line-height: 1.6;
+	}
+	.notcounted b { color: var(--warn); }
 	.layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
 	.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 	.parties { list-style: none; margin: 0; padding: 0; }

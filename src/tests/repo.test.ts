@@ -80,3 +80,20 @@ describe('session cookie', () => {
 		expect(readSessionValue(v, 'secret-secret-secret', Date.now() + 31 * 86_400_000)).toBeNull();
 	});
 });
+
+describe('rule-breaking predictions', () => {
+	it('stay stored and editable but are left out of counted()', async () => {
+		const u = await repo.ensureUser('absurd', 'x@x.com');
+		const all120 = Object.fromEntries(Object.keys(POLL_AVERAGE).map((k) => [k, 0]));
+		all120.haredi = 120;
+		// simulate a prediction saved before the 40-seat rule existed
+		await repo.savePrediction(u.uid, all120, 90, future);
+		expect((await repo.all(true)).length).toBe(1);
+		expect((await repo.counted(true)).length).toBe(0);
+		expect(await repo.byPublicId(u.publicId)).toBeNull();
+		// the owner fixes it → it counts again
+		await repo.savePrediction(u.uid, POLL_AVERAGE, 70, future);
+		expect((await repo.counted(true)).length).toBe(1);
+		expect((await repo.byPublicId(u.publicId))?.seats.likud).toBe(POLL_AVERAGE.likud);
+	});
+});
