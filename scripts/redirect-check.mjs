@@ -28,18 +28,20 @@ if (x.link !== '/api/auth/google/start?next=%2Fpredict') fails.push(`X in-app br
 
 const start = await fetch(base + '/api/auth/google/start?next=/predict', { redirect: 'manual' });
 const loc = new URL(start.headers.get('location') ?? 'about:blank');
-const cookies = start.headers.getSetCookie?.() ?? [];
-const state = cookies.find((c) => c.startsWith('oauth_state='))?.split(';')[0].split('=')[1];
-console.log('start →', start.status, loc.origin + loc.pathname, '| redirect_uri', loc.searchParams.get('redirect_uri'), '| state cookie', state ? 'set' : 'missing');
+const state = loc.searchParams.get('state');
+console.log('start →', start.status, loc.origin + loc.pathname, '| redirect_uri', loc.searchParams.get('redirect_uri'), '| signed state', state ? 'yes' : 'no');
 if (start.status !== 302 || loc.origin !== 'https://accounts.google.com') fails.push('start should redirect to Google');
 if (!loc.searchParams.get('redirect_uri')?.endsWith('/api/auth/google/redirect')) fails.push('redirect_uri must be the exact registered address');
-if (!state || loc.searchParams.get('state') !== state) fails.push('state must match the cookie');
+if (!state || !state.includes('.')) fails.push('state should be signed');
 
-const cb = (q, cookie) => fetch(base + '/api/auth/google/redirect?' + q, { redirect: 'manual', headers: cookie ? { cookie } : {} });
-const wrong = await cb('code=x&state=wrong', `oauth_state=${state}`);
-const fake = await cb(`code=fake&state=${state}`, `oauth_state=${state}`);
-console.log(`callback: wrong state ${wrong.status} → ${wrong.headers.get('location')} · fake code ${fake.status} → ${fake.headers.get('location')}`);
+// no cookies at all (as in X's browser): a valid state must be accepted, so a fake code reaches Google
+const cb = (q) => fetch(base + '/api/auth/google/redirect?' + q, { redirect: 'manual' });
+const wrong = await cb('code=x&state=wrong');
+const tampered = await cb(`code=x&state=${state.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'))}`);
+const fake = await cb(`code=fake&state=${encodeURIComponent(state)}`);
+console.log(`callback (no cookies): wrong state → ${wrong.headers.get('location')} · tampered → ${tampered.headers.get('location')} · valid state + fake code → ${fake.headers.get('location')}`);
 if (wrong.headers.get('location') !== '/?signin=failed') fails.push('wrong state should fail');
-if (fake.headers.get('location') !== '/?signin=failed') fails.push('fake code should fail');
+if (tampered.headers.get('location') !== '/?signin=failed') fails.push('tampered state should fail');
+if (fake.headers.get('location') !== '/?signin=failed') fails.push('fake code should fail at the exchange');
 await b.close();
 console.log(fails.length ? `FAIL\n${fails.join('\n')}` : 'redirect-check ok');
