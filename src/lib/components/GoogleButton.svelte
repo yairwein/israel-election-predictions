@@ -49,6 +49,10 @@
 {#if error}<p class="err">{error}</p>{/if}
 
 <style>
-	.gbtn { min-height: 40px; display: inline-block; }
+	/* Google draws the button in an iframe whose page is light. If the iframe inherits our dark
+	   color-scheme, the browser paints an opaque white backdrop behind it. Matching the iframe's
+	   scheme keeps it transparent; the button itself is still dark (theme: filled_black). */
+	.gbtn { min-height: 40px; display: inline-block; color-scheme: light; }
+	.gbtn :global(iframe) { color-scheme: light; }
 	.err { color: var(--bad); font-size: 0.85rem; margin: 6px 0 0; }
 </style>
