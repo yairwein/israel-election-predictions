@@ -9,3 +9,6 @@ node_modules
 vite.config.ts.timestamp-*
 *.log
 /screens
+/check
+/fonts
+check-*.png
