@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { ScenarioStats } from '$lib/model';
 	import { pct } from '$lib/format';
+	import ScenarioToggle from './ScenarioToggle.svelte';
+	import { scenario, SCENARIO_LABELS } from '$lib/scenario.svelte';
 
 	let { scenarios, n }: { scenarios: ScenarioStats[]; n: number } = $props();
-	let active = $state<'with_amcha' | 'without_amcha'>('with_amcha');
+	const active = $derived(scenario.id);
 	const sc = $derived(scenarios.find((s) => s.id === active)!);
 	const other = $derived(scenarios.find((s) => s.id !== active)!);
 
@@ -13,7 +15,7 @@
 			title: 'גוש נתניהו 61+',
 			sub: active === 'with_amcha'
 				? 'הליכוד, ש״ס, עוצמה יהודית, הציונות הדתית, יהדות התורה + עמך ישראל'
-				: 'הליכוד, ש״ס, עוצמה יהודית, הציונות הדתית, יהדות התורה (בלי עמך ישראל)',
+				: 'הליכוד, ש״ס, עוצמה יהודית, הציונות הדתית, יהדות התורה',
 			o: sc.coalition,
 			seats: sc.coalitionSeats,
 			color: 'var(--coalition)'
@@ -23,7 +25,7 @@
 			title: 'גוש האופוזיציה 61+',
 			sub: active === 'with_amcha'
 				? 'כל השאר, ללא המפלגות הערביות'
-				: 'כל השאר, ללא המפלגות הערביות וללא עמך ישראל',
+				: 'כל השאר, ללא המפלגות הערביות ועמך ישראל',
 			o: sc.opposition,
 			seats: sc.oppositionSeats,
 			color: 'var(--opposition)'
@@ -33,7 +35,7 @@
 			title: active === 'with_amcha' ? 'אין 61 בלי מפלגה ערבית' : 'אין 61 בלי מפלגה ערבית או עמך ישראל',
 			sub: active === 'with_amcha'
 				? 'אף גוש לא מגיע ל-61 בלי שיתוף פעולה עם רע״ם או הרשימה המשותפת'
-				: 'אף גוש לא מגיע ל-61 בלי רע״ם, הרשימה המשותפת או עמך ישראל (שנספרת בנפרד)',
+				: 'אף גוש לא מגיע ל-61 בלי רע״ם, הרשימה המשותפת או עמך ישראל',
 			o: sc.neither,
 			seats: sc.arabSeats,
 			color: 'var(--neither)'
@@ -47,14 +49,7 @@
 			<div class="eyebrow">סיכויים לפי ממוצע התחזיות</div>
 			<h2>מי יגיע ל-61?</h2>
 		</div>
-		<div class="seg" role="tablist" aria-label="שיוך עמך ישראל">
-			<button role="tab" aria-selected={active === 'with_amcha'} class:on={active === 'with_amcha'} onclick={() => (active = 'with_amcha')}>
-				כולל עמך ישראל
-			</button>
-			<button role="tab" aria-selected={active === 'without_amcha'} class:on={active === 'without_amcha'} onclick={() => (active = 'without_amcha')}>
-				בלי עמך ישראל
-			</button>
-		</div>
+		<ScenarioToggle />
 	</div>
 
 	<div class="stack" aria-hidden="true">
@@ -86,11 +81,7 @@
 
 	{#if n}
 		<p class="foot">
-			{#if active === 'with_amcha'}
-				בלי עמך ישראל: גוש נתניהו <b class="num">{pct(other.coalition.share)}</b>, אופוזיציה <b class="num">{pct(other.opposition.share)}</b>, אין 61 <b class="num">{pct(other.neither.share)}</b>.
-			{:else}
-				כולל עמך ישראל: גוש נתניהו <b class="num">{pct(other.coalition.share)}</b>, אופוזיציה <b class="num">{pct(other.opposition.share)}</b>, אין 61 <b class="num">{pct(other.neither.share)}</b>.
-			{/if}
+			כש{SCENARIO_LABELS[other.id]}: גוש נתניהו <b class="num">{pct(other.coalition.share)}</b>, אופוזיציה <b class="num">{pct(other.opposition.share)}</b>, אין 61 <b class="num">{pct(other.neither.share)}</b>.
 			הסיכוי = שיעור התחזיות שבהן זה קורה. בסוגריים: רווח סמך 95%.
 		</p>
 	{/if}
@@ -100,12 +91,6 @@
 	.odds { display: flex; flex-direction: column; gap: 18px; }
 	.head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
 	h2 { font-size: 1.5rem; font-weight: 800; }
-	.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 4px; }
-	.seg button {
-		border: 0; background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 999px;
-		cursor: pointer; font-weight: 600; font-size: 0.88rem;
-	}
-	.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
 	.stack { display: flex; height: 14px; border-radius: 999px; overflow: hidden; gap: 2px; background: var(--surface-2); }
 	.stack div { transition: flex 0.4s ease; }
 	.rows { display: flex; flex-direction: column; }
@@ -121,8 +106,6 @@
 	.foot { font-size: 0.82rem; color: var(--muted); margin: 0; }
 	@media (max-width: 560px) {
 		h2 { font-size: 1.3rem; }
-		.seg { width: 100%; }
-		.seg button { flex: 1; padding: 8px 6px; }
 		.row { gap: 10px; }
 		.p { font-size: 1.6rem; }
 		.s { font-size: 0.78rem; }

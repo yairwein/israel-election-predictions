@@ -74,12 +74,33 @@ for (const t of targets) {
 		await go('menu-open', () => page.getByRole('button', { name: 'תפריט' }).click({ timeout: 5000 }));
 		await page.screenshot({ path: `${out}/${t.name}-menu.png` });
 		await go('menu-close', () => page.getByRole('button', { name: 'תפריט' }).click({ timeout: 5000 }));
-		await go('tab', () => page.getByRole('tab', { name: 'בלי עמך ישראל' }).click({ timeout: 5000 }));
-		await page.screenshot({ path: `${out}/${t.name}-results-without.png` });
+		await go('tab', () => page.getByRole('tab', { name: 'עמך ישראל לא משוייכת לגוש' }).first().click({ timeout: 5000 }));
+		await go('toggles-in-sync', async () => {
+			const states = await page.getByRole('tab', { name: 'עמך ישראל לא משוייכת לגוש' }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-selected')));
+			if (states.length < 2 || states.some((x) => x !== 'true')) throw new Error(`toggles out of sync: ${states}`);
+		});
+		await page.screenshot({ path: `${out}/${t.name}-results-without.png`, fullPage: true });
+		await go('persisted', async () => {
+			await page.goto(base + '/predict', { waitUntil: 'networkidle' });
+			const sel = await page.getByRole('tab', { name: 'עמך ישראל לא משוייכת לגוש' }).first().getAttribute('aria-selected');
+			if (sel !== 'true') throw new Error('scenario choice not kept across pages');
+			await page.getByRole('tab', { name: 'עמך ישראל בגוש נתניהו' }).first().click();
+		});
 	} catch (e) {
 		problems.push(`${t.name}: interaction failed at ${step}: ${e.message.split('\n').slice(0, 12).join(' / ')}`);
 		await page.screenshot({ path: `${out}/${t.name}-FAIL.png` });
 	}
+	// Hemicycle legend reads right → left from the right wing, and the chart puts the right wing on the right.
+	await page.goto(base + '/results', { waitUntil: 'networkidle' });
+	const lg = await page.evaluate(() => {
+		const items = [...document.querySelectorAll('.legend li')].map((li) => ({ t: li.textContent, x: li.getBoundingClientRect().left }));
+		const circles = [...document.querySelectorAll('svg[role=img] circle')].map((c) => ({ x: c.getBoundingClientRect().left, f: c.getAttribute('fill') }));
+		circles.sort((a, b) => b.x - a.x);
+		return { firstLegend: items[0]?.t, firstX: items[0]?.x, secondX: items[1]?.x, rightmostFill: circles[0]?.f };
+	});
+	if (!lg.firstLegend?.includes('עוצמה יהודית')) problems.push(`${t.name}: legend should start with עוצמה יהודית, got ${lg.firstLegend}`);
+	if (!(lg.firstX > lg.secondX)) problems.push(`${t.name}: legend is not right-to-left`);
+	if (lg.rightmostFill !== '#e8892b') problems.push(`${t.name}: rightmost seat should be עוצמה יהודית, got ${lg.rightmostFill}`);
 	await ctx.close();
 }
 await browser.close();

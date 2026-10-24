@@ -10,6 +10,8 @@
 	} from '$lib/parties';
 	import { validateSeats } from '$lib/validate';
 	import { fmtDateTime, fmtShort } from '$lib/format';
+	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
+	import { scenario } from '$lib/scenario.svelte';
 
 	let { data } = $props();
 	const me = $derived(data.me);
@@ -39,13 +41,13 @@
 			PARTIES.some((p) => (saved[p.id] ?? 0) !== (seats[p.id] ?? 0)) ||
 			(data.me.prediction?.turnout ?? '') !== (turnout === '' ? '' : Number(turnout))
 	);
-	const [scWith, scWithout] = getScenarios();
+	const scenarios = getScenarios();
+	const sc = $derived(scenarios.find((x) => x.id === scenario.id)!);
 	const blocs = $derived({
-		coalWith: sumOf(seats, scWith.coalition),
-		coalWithout: sumOf(seats, scWithout.coalition),
-		oppWith: sumOf(seats, scWith.opposition),
-		amcha: sumOf(seats, scWithout.unaligned),
-		arab: sumOf(seats, scWith.arab)
+		coal: sumOf(seats, sc.coalition),
+		opp: sumOf(seats, sc.opposition),
+		unaligned: sumOf(seats, sc.unaligned),
+		arab: sumOf(seats, sc.arab)
 	});
 
 	function setSeat(id: string, v: number) {
@@ -249,28 +251,30 @@
 
 			<aside class="side">
 				<div class="card sticky">
-					<Hemicycle {seats} label={remaining === 0 ? 'מנדטים' : `נותרו ${remaining}`} />
+					<Hemicycle {seats} label={remaining === 0 ? 'מנדטים' : `נותרו ${remaining}`} legend />
 					<div class="total" class:ok={remaining === 0} class:over={remaining < 0}>
 						{#if remaining === 0}✓ בדיוק 120{:else if remaining > 0}נותרו <b class="num">{remaining}</b> מנדטים{:else}עודף של <b class="num">{-remaining}</b>{/if}
 					</div>
 
+					<ScenarioToggle full />
 					<div class="blocs">
 						<div class="bl">
 							<span class="dot" style="background: var(--coalition)"></span>
 							<span>גוש נתניהו</span>
-							<b class="num" class:maj={blocs.coalWith >= MAJORITY}>{blocs.coalWith}</b>
-						</div>
-						<div class="bl sub faint">
-							<span></span><span>בלי עמך ישראל</span><b class="num" class:maj={blocs.coalWithout >= MAJORITY}>{blocs.coalWithout}</b>
+							<b class="num" class:maj={blocs.coal >= MAJORITY}>{blocs.coal}</b>
 						</div>
 						<div class="bl">
 							<span class="dot" style="background: var(--opposition)"></span>
 							<span>אופוזיציה</span>
-							<b class="num" class:maj={blocs.oppWith >= MAJORITY}>{blocs.oppWith}</b>
+							<b class="num" class:maj={blocs.opp >= MAJORITY}>{blocs.opp}</b>
 						</div>
-						<div class="bl sub faint">
-							<span></span><span>עמך ישראל (כשאינה בגוש נתניהו)</span><b class="num">{blocs.amcha}</b>
-						</div>
+						{#if sc.unaligned.length}
+							<div class="bl">
+								<span class="dot" style="background: #c49a2c"></span>
+								<span>עמך ישראל (לא משוייכת)</span>
+								<b class="num">{blocs.unaligned}</b>
+							</div>
+						{/if}
 						<div class="bl">
 							<span class="dot" style="background: var(--neither)"></span>
 							<span>מפלגות ערביות</span>
@@ -296,9 +300,9 @@
 						{#if remaining === 0}✓ 120{:else if remaining > 0}נותרו <b class="num">{remaining}</b>{:else}עודף <b class="num">{-remaining}</b>{/if}
 					</div>
 					<div class="ab-blocs num">
-						<span style="color: var(--coalition)">{blocs.coalWith}</span>
+						<span style="color: var(--coalition)">{blocs.coal}</span>
 						<span class="faint">·</span>
-						<span style="color: var(--opposition)">{blocs.oppWith}</span>
+						<span style="color: var(--opposition)">{blocs.opp}</span>
 						<span class="faint">·</span>
 						<span class="faint">{blocs.arab}</span>
 					</div>
@@ -318,7 +322,7 @@
 					{#each data.history as h}
 						<li>
 							<span class="faint">{fmtShort(h.updatedAt)}</span>
-							<span class="num">גוש נתניהו {sumOf(h.seats, scWith.coalition)} · אופוזיציה {sumOf(h.seats, scWith.opposition)} · ערביות {sumOf(h.seats, scWith.arab)}</span>
+							<span class="num">גוש נתניהו {sumOf(h.seats, sc.coalition)} · אופוזיציה {sumOf(h.seats, sc.opposition)} · ערביות {sumOf(h.seats, sc.arab)}</span>
 							<span class="faint">גרסה {h.version}</span>
 						</li>
 					{/each}
@@ -384,9 +388,7 @@
 	.total.over { color: var(--bad); }
 	.blocs { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 	.bl { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; align-items: center; }
-	.bl.sub { font-size: 0.82rem; }
 	.bl b { font-size: 1.1rem; }
-	.bl.sub b { font-size: 0.9rem; font-weight: 600; }
 	.maj { color: var(--good); }
 	.save { width: 100%; padding: 12px; font-size: 1.05rem; }
 	.err { color: var(--bad); font-size: 0.88rem; margin: 0; }

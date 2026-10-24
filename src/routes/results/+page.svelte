@@ -5,12 +5,13 @@
 	import PartyBars from '$lib/components/PartyBars.svelte';
 	import Hemicycle from '$lib/components/Hemicycle.svelte';
 	import Histogram from '$lib/components/Histogram.svelte';
+	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
+	import { scenario } from '$lib/scenario.svelte';
 	import { fmtDateTime, fmtShort, one } from '$lib/format';
 
 	let { data } = $props();
 	const s = $derived(data.summary);
 	const agg = $derived(s.aggregate);
-	let histScenario = $state<'with_amcha' | 'without_amcha'>('with_amcha');
 
 	onMount(() => {
 		const t = setInterval(() => invalidate('app:summary'), 30_000);
@@ -66,27 +67,20 @@
 			<div class="card">
 				<div class="eyebrow">הכנסת לפי ממוצע התחזיות</div>
 				<h3 class="ttl">חלוקת 120 המנדטים</h3>
-				<Hemicycle seats={agg.meanAllocation} label="ממוצע התחזיות" />
+				<Hemicycle seats={agg.meanAllocation} label="ממוצע התחזיות" legend />
 				<p class="note faint">הממוצע מעוגל לכנסת של 120, מפלגות שממוצען מתחת לאחוז החסימה לא מקבלות מושבים.</p>
 			</div>
 			<div class="card">
-				<div class="head-row">
-					<div>
-						<div class="eyebrow">התפלגות התחזיות</div>
-						<h3 class="ttl">כמה מנדטים לגוש נתניהו?</h3>
-					</div>
-					<select bind:value={histScenario} aria-label="תרחיש">
-						<option value="with_amcha">כולל עמך ישראל</option>
-						<option value="without_amcha">בלי עמך ישראל</option>
-					</select>
-				</div>
-				{#each agg.scenarios.filter((x) => x.id === histScenario) as sc}
+				<div class="eyebrow">התפלגות התחזיות</div>
+				<h3 class="ttl">כמה מנדטים לגוש נתניהו?</h3>
+				<div class="tgl"><ScenarioToggle full /></div>
+				{#each agg.scenarios.filter((x) => x.id === scenario.id) as sc}
 					<Histogram data={sc.histogram} />
 					<div class="blocs">
 						<div><span class="dot" style="background: var(--coalition)"></span> גוש נתניהו <b class="num">{one(sc.coalitionSeats.mean)}</b> <span class="faint num">({one(sc.coalitionSeats.p10)}–{one(sc.coalitionSeats.p90)})</span></div>
 						<div><span class="dot" style="background: var(--opposition)"></span> אופוזיציה <b class="num">{one(sc.oppositionSeats.mean)}</b> <span class="faint num">({one(sc.oppositionSeats.p10)}–{one(sc.oppositionSeats.p90)})</span></div>
 						{#if sc.id === 'without_amcha'}
-							<div><span class="dot" style="background: #c49a2c"></span> עמך ישראל (בנפרד) <b class="num">{one(sc.unalignedSeats.mean)}</b> <span class="faint num">({one(sc.unalignedSeats.p10)}–{one(sc.unalignedSeats.p90)})</span></div>
+							<div><span class="dot" style="background: #c49a2c"></span> עמך ישראל (לא משוייכת) <b class="num">{one(sc.unalignedSeats.mean)}</b> <span class="faint num">({one(sc.unalignedSeats.p10)}–{one(sc.unalignedSeats.p90)})</span></div>
 						{/if}
 						<div><span class="dot" style="background: var(--neither)"></span> מפלגות ערביות <b class="num">{one(sc.arabSeats.mean)}</b> <span class="faint num">({one(sc.arabSeats.p10)}–{one(sc.arabSeats.p90)})</span></div>
 					</div>
@@ -108,8 +102,8 @@
 					{#each data.recent as r}
 						<li>
 							<span class="nick">{r.nickname}</span>
-							<span class="mini num" title="גוש נתניהו (כולל עמך ישראל) / אופוזיציה / ערביות">
-								<b style="color: var(--coalition)">{r.coalition}</b> · <b style="color: var(--opposition)">{r.opposition}</b> · <b class="faint">{r.arab}</b>
+							<span class="mini num" title="גוש נתניהו / אופוזיציה / מפלגות ערביות">
+								<b style="color: var(--coalition)">{scenario.id === 'with_amcha' ? r.coalition : r.coalitionCore}</b> · <b style="color: var(--opposition)">{r.opposition}</b> · <b class="faint">{r.arab}</b>
 							</span>
 							<span class="faint when">{fmtShort(r.updatedAt)}</span>
 						</li>
@@ -130,8 +124,7 @@
 	.empty { text-align: center; padding: 48px 22px; margin: 28px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 	.ttl { font-size: 1.15rem; font-weight: 700; margin: 2px 0 14px; }
 	.note { font-size: 0.78rem; margin: 10px 0 0; }
-	.head-row { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
-	select { font: inherit; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+	.tgl { margin-bottom: 14px; }
 	.blocs { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; font-size: 0.92rem; }
 	.blocs div { display: flex; align-items: center; gap: 8px; }
 	.recent { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 24px; }

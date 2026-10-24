@@ -1,4 +1,4 @@
-/** Seat positions for a parliament half-circle, ordered left → right. */
+/** Seat positions for a parliament half-circle, ordered left → right on screen. */
 export interface SeatPoint {
 	x: number;
 	y: number;
@@ -23,8 +23,11 @@ export function hemicycle(total = 120, rows = 8, inner = 0.38): { points: SeatPo
 	return { points: pts.map(({ x, y }) => ({ x, y })), r: dot };
 }
 
-/** Left-to-right order used when drawing the Knesset. */
-export const SPECTRUM = [
-	'joint', 'raam', 'democrats', 'together', 'yashar', 'yb', 'reservists', 'haredi',
-	'amcha', 'utj', 'shas', 'likud', 'rzp', 'otzma'
+/**
+ * Political order read right → left, as in Hebrew: the right wing sits on the right of the
+ * chart and the list starts there. The legend uses the same order.
+ */
+export const SPECTRUM_RTL = [
+	'otzma', 'rzp', 'likud', 'shas', 'utj', 'amcha', 'haredi', 'reservists', 'yb',
+	'yashar', 'together', 'democrats', 'raam', 'joint'
 ];

@@ -4,11 +4,13 @@
 	import GoogleButton from '$lib/components/GoogleButton.svelte';
 	import { POLL_AVERAGE } from '$lib/parties';
 	import { fmtDateTime, pct } from '$lib/format';
+	import ScenarioToggle from '$lib/components/ScenarioToggle.svelte';
+	import { scenario } from '$lib/scenario.svelte';
 
 	let { data } = $props();
 	const s = $derived(data.summary);
 	const me = $derived(data.me);
-	const withAmcha = $derived(s.aggregate?.scenarios.find((x) => x.id === 'with_amcha'));
+	const sc = $derived(s.aggregate?.scenarios.find((x) => x.id === scenario.id));
 	const canPredict = $derived(me.signedIn || me.devUser);
 </script>
 
@@ -44,15 +46,16 @@
 
 		<div class="visual card">
 			{#if s.aggregate && s.n > 0 && !s.hidden}
-				<Hemicycle seats={s.aggregate.meanAllocation} label="ממוצע התחזיות" />
+				<Hemicycle seats={s.aggregate.meanAllocation} label="ממוצע התחזיות" legend />
+				<div class="tgl"><ScenarioToggle full /></div>
 				<div class="summary">
-					<div><span class="num big" style="color: var(--coalition)">{pct(withAmcha?.coalition.share ?? 0)}</span><span>גוש נתניהו 61+</span></div>
-					<div><span class="num big" style="color: var(--opposition)">{pct(withAmcha?.opposition.share ?? 0)}</span><span>אופוזיציה 61+</span></div>
-					<div><span class="num big" style="color: var(--neither)">{pct(withAmcha?.neither.share ?? 0)}</span><span>אין 61</span></div>
+					<div><span class="num big" style="color: var(--coalition)">{pct(sc?.coalition.share ?? 0)}</span><span>גוש נתניהו 61+</span></div>
+					<div><span class="num big" style="color: var(--opposition)">{pct(sc?.opposition.share ?? 0)}</span><span>אופוזיציה 61+</span></div>
+					<div><span class="num big" style="color: var(--neither)">{pct(sc?.neither.share ?? 0)}</span><span>אין 61</span></div>
 				</div>
-				<p class="faint small center">על סמך {s.n.toLocaleString('he-IL')} תחזיות · כולל עמך ישראל בגוש נתניהו</p>
+				<p class="faint small center">על סמך {s.n.toLocaleString('he-IL')} תחזיות</p>
 			{:else}
-				<Hemicycle seats={POLL_AVERAGE} label="ממוצע הסקרים" />
+				<Hemicycle seats={POLL_AVERAGE} label="ממוצע הסקרים" legend />
 				<p class="faint small center">ממוצע 12 הסקרים האחרונים (16–22.10). ממוצע התחזיות יופיע כאן.</p>
 			{/if}
 		</div>
@@ -88,6 +91,7 @@
 	.countdown { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
 	.lock { padding: 14px 18px; }
 	.visual { padding: 24px; }
+	.tgl { margin-top: 14px; }
 	.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; text-align: center; }
 	.summary div { display: flex; flex-direction: column; }
 	.summary span:last-child { font-size: 0.8rem; color: var(--muted); }
