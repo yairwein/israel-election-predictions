@@ -11,6 +11,7 @@
 	import ShareButtons from '$lib/components/ShareButtons.svelte';
 	import ExtremesToggle from '$lib/components/ExtremesToggle.svelte';
 	import TrendChart from '$lib/components/TrendChart.svelte';
+	import SmallParties from '$lib/components/SmallParties.svelte';
 	import { extremes } from '$lib/extremes.svelte';
 	import { fmtDateTime, fmtShort, one } from '$lib/format';
 
@@ -118,6 +119,8 @@
 			<h3 class="ttl">מנדטים צפויים</h3>
 			<PartyBars parties={agg.parties} includeExtremes={extremes.include} />
 		</div>
+
+		<div class="section"><SmallParties parties={agg.parties} n={s.n} /></div>
 
 		{#if data.trend.length >= 2}
 			<div class="card section">
