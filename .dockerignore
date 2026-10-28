@@ -8,4 +8,3 @@ build
 data
 .git
 deploy.env
-jobs
