@@ -23,6 +23,7 @@
 		{ href: '/', label: 'ראשי' },
 		{ href: '/predict', label: 'התחזית שלי' },
 		{ href: '/results', label: 'ממוצע התחזיות' },
+		{ href: '/leaderboard', label: 'טבלת המנחשים' },
 		{ href: '/method', label: 'איך זה עובד' }
 	];
 

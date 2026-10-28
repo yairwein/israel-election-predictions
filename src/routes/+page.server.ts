@@ -1,7 +1,9 @@
 import type { PageServerLoad } from './$types';
 import { getSummary, publicSummary } from '$lib/server/aggregate';
+import { getOfficial } from '$lib/server/official';
 
 export const load: PageServerLoad = async ({ depends }) => {
 	depends('app:summary');
-	return { summary: publicSummary(await getSummary()) };
+	const official = await getOfficial().catch(() => null);
+	return { summary: publicSummary(await getSummary()), hasResults: !!official, resultsFinal: official?.final ?? false };
 };

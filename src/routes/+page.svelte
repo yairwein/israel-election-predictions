@@ -28,6 +28,10 @@
 				<div class="signin-failed" role="alert">ההתחברות עם Google לא הצליחה. נסו שוב, או פתחו את האתר בדפדפן הרגיל.</div>
 			{/if}
 
+			{#if data.hasResults}
+				<a class="lock card results-link" href="/leaderboard">🏆 {data.resultsFinal ? 'התוצאות הסופיות פורסמו' : 'התוצאות מתחילות להגיע'}: <b>לטבלת המנחשים ←</b></a>
+			{/if}
+
 			{#if s.locked}
 				<div class="lock card">🔒 התחזיות ננעלו ב{fmtDateTime(s.lockAt)}. <a href="/results">לממוצע התחזיות ←</a></div>
 			{:else}
@@ -95,6 +99,8 @@
 	.center { text-align: center; margin: 8px 0 0; }
 	.countdown { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
 	.lock { padding: 14px 18px; }
+	.results-link { display: block; margin-bottom: 12px; color: var(--text); text-decoration: none !important; }
+	.results-link b { color: var(--accent); }
 	.signin-failed {
 		margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; font-size: 0.92rem;
 		background: color-mix(in srgb, var(--bad) 10%, var(--surface)); color: var(--bad);
